@@ -1,23 +1,53 @@
 function Get-AcuVersionPath{
     param(
-        [string] [Alias("v")] $versionNbr
-    )
-    return $Global:AcumaticaERPVersionDir + $versionNbr
-}
-
-function Read-AcuVersionPath{
-    param(
         [string] $versionNbr
     )
-    $versionDir = Join-Path (Get-AcuVersionPath -v $version) "\Data\ac.exe"
-    return Test-Path $versionDir
+    $acuDir = Get-AcumaticaDir
+    $versionDir = Get-AcumaticaERPVersionDir 
+    $fullPath = Join-Path -Path (Join-Path -Path $acuDir -ChildPath $versionDir) -ChildPath $versionNbr
+    return $fullPath
 }
 
 function Get-AcuConfigurationExe{
     param(
         [string] $versionNbr
     )
-    return $Global:AcumaticaERPVersionDir + $versionNbr + "\Data\ac.exe"
+    return Join-Path (Get-AcuVersionPath -versionNbr $versionNbr) "\Data\ac.exe"
+}
+
+function Test-AcuVersionPath{
+    param(
+        [string] $versionNbr
+    )
+    $fullPath = Get-AcuConfigurationExe -versionNbr $versionNbr
+    return Test-Path $fullPath
+}
+
+function Get-DefaultSitePath{
+    param(
+        [string] $siteName
+    )
+    $acuDir = Get-AcumaticaDir
+    $siteDir = Get-AcumaticaSiteDir
+    $fullPath = Join-Path -Path (Join-Path -Path $acuDir -ChildPath $siteDir) -ChildPath $siteName
+    return $fullPath
+}
+
+function Test-VersionFormat {
+    param (
+        [string] $version
+    )
+    
+    # Define a regular expression pattern for the version format
+    $versionPattern = '^\d{2}\.\d{3}\.\d{4}$'
+    
+    # Test if the version string matches the pattern
+    if ($version -match $versionPattern) {
+        return $true
+    }
+    else {
+        throw "Version '$version' is invalid. Expected format is ##.###.####"
+    }
 }
 
 function PromptYesNo{
@@ -30,11 +60,9 @@ function PromptYesNo{
     while (!$chosen) {
         switch ($response) {
         "Y" {
-            Write-Host "You chose Yes."
             $chosen = $true
         }
         "N" {
-            Write-Host "You chose No."
             $chosen = $true
         }
         default {
@@ -53,11 +81,10 @@ function Invoke-AcuExe {
         [string]$version
     )
         <# -- Get Ac.exe --#>
-        $versionPath = Get-AcuVersionPath -v $version;
-        $acProcess = "$($versionPath)\Data\ac.exe"
+        $acProcess = Get-AcuConfigurationExe -versionNbr $version
     
         if (!(Test-Path $acProcess)){
-            throw "Acumatica Version $($version) not installed"
+            throw "ac.exe not found at $($acProcess)"
         }
 
         & $acProcess $arguments

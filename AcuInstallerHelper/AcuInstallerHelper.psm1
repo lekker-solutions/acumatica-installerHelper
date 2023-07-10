@@ -1,40 +1,22 @@
-
-# Set Default Values for Global Varibles if they do not already exist
-$acumaticaDirGlobalVariableName = "AcumaticaDir";
-$acumaticaSiteDirGlobalVariableName = "AcumaticaSiteDir";
-$acumaticaERPVersionDirGlobalVariableName = "AcumaticaERPVersionDir";
-
-$acumaticaDirDefaultValue = "C:\Acumatica\"
-$acumaticaSiteDirDefaultValue = $acumaticaDirDefaultValue + "Sites\"
-$acumaticaERPVersionDirDefaultValue = $acumaticaDirDefaultValue + "Version_ERP\"
-
-if (-not (Get-Variable -Name $acumaticaDirGlobalVariableName -Scope Global -ErrorAction SilentlyContinue)) {
-    Set-Variable -Name $acumaticaDirGlobalVariableName -Value $acumaticaDirDefaultValue -Scope Global
-}
-if (-not (Get-Variable -Name $acumaticaSiteDirGlobalVariableName -Scope Global -ErrorAction SilentlyContinue)) {
-    Set-Variable -Name $acumaticaSiteDirGlobalVariableName -Value $acumaticaSiteDirDefaultValue -Scope Global
-}
-if (-not (Get-Variable -Name $acumaticaERPVersionDirGlobalVariableName -Scope Global -ErrorAction SilentlyContinue)) {
-    Set-Variable -Name $acumaticaERPVersionDirGlobalVariableName -Value $acumaticaERPVersionDirDefaultValue -Scope Global
-}
-
 function Add-AcuSiteVersion{
     param (
         [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
         [switch] [Alias("dt")] $debuggerTools
     )
 
+    Test-VersionFormat -version $version
+
     $dir = Get-AcuVersionPath($version)
     $majRel = $version.Substring(0,4)
 
     <#-- Download Installer --#>
     $site = "http://acumatica-builds.s3.amazonaws.com/builds/"
-    $downloadUrl = "$($site)$($majRel)/$($version)/AcumaticaERP/AcumaticaERPInstall.msi"
+    $downloadUrl = "{0}{1}/{2}/AcumaticaERP/AcumaticaERPInstall.msi" -f $site, $majRel, $version
     $tempInstaller = Join-Path $env:TEMP "install.msi"
 
     <# --  Extract MSI into appropriate folder and rename -- #>
     Write-Output "Checking for existing Acumatica Install"
-    if (Test-Path "$($dir)\Data"){
+    if (Test-AcuVersionPath -version $version){
         Write-Output "EXISTING INSTALL FOR THIS VERSION AT $($dir)"
         return
     }
@@ -77,8 +59,9 @@ function Remove-AcuSiteVersion{
     param (
         [string] $version
     )
+    Test-VersionFormat -version $version
     $dir = Get-AcuVersionPath($version)
-    Remove-Item -Recurse -Force $dir
+    Remove-Item -Recurse -Force $di
 }
 
 function Add-AcuSite{
@@ -90,6 +73,8 @@ function Add-AcuSite{
         [switch] [Alias("pt")] $portal,
         [bool] [Alias("dt")] $debuggerTools
     )
+
+    Test-VersionFormat -version $version
 
     if (Read-AcuVersionPath -versionNbr $version -eq $false){
         # We need to install a new version
@@ -117,7 +102,7 @@ function Add-AcuSite{
     }
 
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)){
-        $siteInstallPath = Join-Path $global:AcumaticaSiteDir "\$($siteName)"
+        $siteInstallPath = Get-DefaultSitePath -name $siteName
     }
 
     $acuArgs = Build-AcuExeArgs -siteName $siteName -sitePath $siteInstallPath -portal $portal -newInstance
@@ -142,4 +127,6 @@ function Update-AcuSite{
         [string] $siteName,
         [string] $newVersion
     )
+
+    Test-VersionFormat -version $newVersion
 }
