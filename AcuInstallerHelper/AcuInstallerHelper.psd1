@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-# RootModule = ''
+RootModule = 'AcuInstallerHelper.psm1'
 
 # Version number of this module.
 ModuleVersion = '0.0.1'
@@ -30,7 +30,7 @@ CompanyName = 'Lekker Solutions LLC'
 Copyright = '(c) Kyle Vanderstoep. All rights reserved.'
 
 # Description of the functionality provided by this module
-# Description = ''
+Description = 'Assists with the installation and removal of Acumatica Sites and Versions'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -57,7 +57,7 @@ Copyright = '(c) Kyle Vanderstoep. All rights reserved.'
 # RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
-ScriptsToProcess = @('AcuInstallerHelper_Functions.ps1')
+ScriptsToProcess = @('AcuInstallerHelper_Functions_Config.ps1','AcuInstallerHelper_Functions.ps1')
 
 # Type files (.ps1xml) to be loaded when importing this module
 # TypesToProcess = @()
@@ -69,7 +69,18 @@ ScriptsToProcess = @('AcuInstallerHelper_Functions.ps1')
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @('Add-AcuSiteVersion','Remove-AcuSiteVersion','Add-AcuSite','Remove-AcuSite','Update-AcuSite')
+FunctionsToExport = @(
+    'Add-AcuSiteVersion',
+    'Remove-AcuSiteVersion',
+    'Add-AcuSite',
+    'Remove-AcuSite',
+    'Update-AcuSite',
+    'Set-AcumaticaDir',
+    'Set-AcumaticaSiteDir',
+    'Set-AcumaticaERPVersionDir',
+    'Get-AcumaticaDir',
+    'Get-AcumaticaSiteDir',
+    'Get-AcumaticaERPVersionDir')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

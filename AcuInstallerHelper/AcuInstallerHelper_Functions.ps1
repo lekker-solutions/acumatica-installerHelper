@@ -43,7 +43,7 @@ function Test-VersionFormat {
     
     # Test if the version string matches the pattern
     if ($version -match $versionPattern) {
-        return $true
+        return
     }
     else {
         throw "Version '$version' is invalid. Expected format is ##.###.####"

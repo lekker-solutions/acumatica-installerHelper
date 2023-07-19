@@ -4,17 +4,17 @@ function Get-ModuleBase{
 
 # Get functions
 function Get-AcumaticaDir {
-    $config = Get-Content -Path Get-ModuleBase | ConvertFrom-Json
+    $config = Get-Content -Path (Get-ModuleBase) | ConvertFrom-Json
     return $config.AcumaticaDir
 }
 
 function Get-AcumaticaSiteDir {
-    $config = Get-Content -Path Get-ModuleBase | ConvertFrom-Json
+    $config = Get-Content -Path (Get-ModuleBase) | ConvertFrom-Json
     return $config.AcumaticaSiteDir
 }
 
 function Get-AcumaticaERPVersionDir {
-    $config = Get-Content -Path Get-ModuleBase  | ConvertFrom-Json
+    $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
     return $config.AcumaticaERPVersionDir
 }
 
@@ -24,9 +24,9 @@ function Set-AcumaticaDir {
         [Parameter(Mandatory=$true)]
         [string] $NewPath
     )
-    $config = Get-Content -Path Get-ModuleBase  | ConvertFrom-Json
+    $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
     $config.AcumaticaDir = $NewPath
-    $config | ConvertTo-Json | Set-Content -Path Get-ModuleBase 
+    $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 
 function Set-AcumaticaSiteDir {
@@ -34,9 +34,9 @@ function Set-AcumaticaSiteDir {
         [Parameter(Mandatory=$true)]
         [string] $NewPath
     )
-    $config = Get-Content -Path Get-ModuleBase  | ConvertFrom-Json
+    $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
     $config.AcumaticaSiteDir = $NewPath
-    $config | ConvertTo-Json | Set-Content -Path Get-ModuleBase 
+    $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 
 function Set-AcumaticaERPVersionDir {
@@ -44,7 +44,7 @@ function Set-AcumaticaERPVersionDir {
         [Parameter(Mandatory=$true)]
         [string] $NewPath
     )
-    $config = Get-Content -Path Get-ModuleBase  | ConvertFrom-Json
+    $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
     $config.AcumaticaERPVersionDir = $NewPath
-    $config | ConvertTo-Json | Set-Content -Path Get-ModuleBase 
+    $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }

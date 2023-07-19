@@ -1,0 +1,32 @@
+name: Test PowerShell Module
+on:
+    push:
+        tags:
+          - '*'
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Restore dependencies
+      run: dotnet restore acumatica-customizationProjectTools.sln
+
+    - name: Build module in Release mode
+      run: dotnet build acumatica-customizationProjectTools.sln -c Release
+
+    - name: Test Module Manifest
+      run: Test-ModuleManifest -Path .\AcuInstallerHelper\AcuInstallerHelper.psd1
+
+    - name: Install Pester
+      run: Install-Module -Name Pester -Force -SkipPublisherCheck
+
+    - name: Import Built Module
+      run: |
+        $modulePath = Join-Path $PSScriptRoot ".\AcuInstallerHelper\" 
+        Import-Module -Name $modulePath
+
+    - name: Test
+      run: Invoke-Pester -Path .\AcuInstallerHelper.Tests\AcuInstallerHelper.Tests.ps1
+
+

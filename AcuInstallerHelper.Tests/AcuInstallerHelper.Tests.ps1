@@ -1,6 +1,11 @@
+function Initialize-Test(){
+    $path = Join-Path $PSScriptRoot "\AcuInstallerHelper\"
+    Import-Module "$($path)" -Verbose
+}
+
 Describe "Add-AcuSiteVersion"{
     BeforeAll {
-
+        Initialize-Test
     }
 
     Context "Add 23R1 Site"{
@@ -18,7 +23,7 @@ Describe "Add-AcuSiteVersion"{
 
 Describe "Remove-AcuSiteVersion"{
     BeforeAll {
-
+        Initialize-Test
     }
 
     Context "Add 23R1 Site"{
@@ -36,7 +41,7 @@ Describe "Remove-AcuSiteVersion"{
 
 Describe "Add-AcuSite"{
     BeforeAll {
-
+        Initialize-Test
     }
 
     Context "Add 23R1 Site"{
@@ -54,7 +59,7 @@ Describe "Add-AcuSite"{
 
 Describe "Remove-AcuSite"{
     BeforeAll {
-
+        Initialize-Test
     }
 
     Context "Add 23R1 Site"{
