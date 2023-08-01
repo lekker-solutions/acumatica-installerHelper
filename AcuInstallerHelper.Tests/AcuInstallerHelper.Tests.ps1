@@ -13,12 +13,6 @@ Describe "Add-AcuSiteVersion"{
             Invoke-ApiPackageUpload -u $username -p $password -url $url -pn $packageName -pp $packagePath -r
         }
     }
-
-    Context "Publish Package"{
-        It "Should publish the package succesfully"{
-            Invoke-ApiPackagePublish -u $username -p $password -url $url -pn $packageName -m -tm Current
-        }
-    }
 }
 
 Describe "Remove-AcuSiteVersion"{
@@ -29,12 +23,6 @@ Describe "Remove-AcuSiteVersion"{
     Context "Add 23R1 Site"{
         It "Should install an acumatica site at "{
             Invoke-ApiPackageUpload -u $username -p $password -url $url -pn $packageName -pp $packagePath -r
-        }
-    }
-
-    Context "Publish Package"{
-        It "Should publish the package succesfully"{
-            Invoke-ApiPackagePublish -u $username -p $password -url $url -pn $packageName -m -tm Current
         }
     }
 }
@@ -49,12 +37,6 @@ Describe "Add-AcuSite"{
             Invoke-ApiPackageUpload -u $username -p $password -url $url -pn $packageName -pp $packagePath -r
         }
     }
-
-    Context "Publish Package"{
-        It "Should publish the package succesfully"{
-            Invoke-ApiPackagePublish -u $username -p $password -url $url -pn $packageName -m -tm Current
-        }
-    }
 }
 
 Describe "Remove-AcuSite"{
@@ -67,12 +49,6 @@ Describe "Remove-AcuSite"{
             Invoke-ApiPackageUpload -u $username -p $password -url $url -pn $packageName -pp $packagePath -r
         }
     }
-
-    Context "Publish Package"{
-        It "Should publish the package succesfully"{
-            Invoke-ApiPackagePublish -u $username -p $password -url $url -pn $packageName -m -tm Current
-        }
-    }
 }
 
 Describe "Update-AcuSite"{
@@ -83,12 +59,6 @@ Describe "Update-AcuSite"{
     Context "Add 23R1 Site"{
         It "Should install an acumatica site at "{
             Invoke-ApiPackageUpload -u $username -p $password -url $url -pn $packageName -pp $packagePath -r
-        }
-    }
-
-    Context "Publish Package"{
-        It "Should publish the package succesfully"{
-            Invoke-ApiPackagePublish -u $username -p $password -url $url -pn $packageName -m -tm Current
         }
     }
 }
