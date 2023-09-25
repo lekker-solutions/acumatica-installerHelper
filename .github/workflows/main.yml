@@ -14,7 +14,7 @@ jobs:
         run: Install-Module -Name Pester -Force -SkipPublisherCheck
 
       - name: Test
-        run: Invoke-Pester -Path .\AcuInstallerHelper.Tests\AcuInstallerHelper.Tests.ps1
+        run: Invoke-Pester -Path AcuInstallerHelper.Tests.ps1
 
   publish:
     needs: test
