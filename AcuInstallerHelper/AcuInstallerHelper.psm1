@@ -1,10 +1,14 @@
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions_Config.ps1')
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions.ps1')
+
+
 function Add-AcuSiteVersion{
     param (
         [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
         [switch] [Alias("dt")] $debuggerTools
     )
 
-    Test-VersionFormat -version $version
+    Test-VersionFormat $version
 
     $dir = Get-AcuVersionPath($version)
     $majRel = $version.Substring(0,4)
@@ -61,7 +65,7 @@ function Remove-AcuSiteVersion{
     )
     Test-VersionFormat -version $version
     $dir = Get-AcuVersionPath($version)
-    Remove-Item -Recurse -Force $di
+    Remove-Item -Recurse -Force $dir
 }
 
 function Add-AcuSite{
