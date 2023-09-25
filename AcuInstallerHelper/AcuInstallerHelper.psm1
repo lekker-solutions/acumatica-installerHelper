@@ -61,7 +61,7 @@ function Remove-AcuSiteVersion{
     )
     Test-VersionFormat -version $version
     $dir = Get-AcuVersionPath($version)
-    Remove-Item -Recurse -Force $di
+    Remove-Item -Recurse -Force $dir
 }
 
 function Add-AcuSite{

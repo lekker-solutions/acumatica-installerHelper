@@ -9,12 +9,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Restore dependencies
-      run: dotnet restore acumatica-customizationProjectTools.sln
-
-    - name: Build module in Release mode
-      run: dotnet build acumatica-customizationProjectTools.sln -c Release
-
     - name: Test Module Manifest
       run: Test-ModuleManifest -Path .\AcuInstallerHelper\AcuInstallerHelper.psd1
 

@@ -1,8 +1,6 @@
 name: Publish PowerShell Module
-on:
-    push:
-        tags:
-          - '*'
+on: workflow_dispatch
+
 jobs:
   publish:
     runs-on: windows-latest
@@ -17,8 +15,8 @@ jobs:
 
     - name: Import Built Module
       run: |
-        $modulePath = Join-Path $PSScriptRoot ".\AcuInstallerHelper\" 
-        Import-Module -Name $modulePath
+        $path = Join-Path $PSScriptRoot "\AcuInstallerHelper\"
+        Import-Module "$($path)" -Verbose
 
     - name: Test
       run: Invoke-Pester -Path .\AcuInstallerHelper.Tests\AcuInstallerHelper.Tests.ps1
