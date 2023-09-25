@@ -4,7 +4,7 @@ function Add-AcuSiteVersion{
         [switch] [Alias("dt")] $debuggerTools
     )
 
-    Test-VersionFormat -version $version
+    Test-VersionFormat $version
 
     $dir = Get-AcuVersionPath($version)
     $majRel = $version.Substring(0,4)
