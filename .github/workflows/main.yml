@@ -1,0 +1,28 @@
+name: main
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Test Module Manifest
+        run: Test-ModuleManifest -Path .\AcuInstallerHelper\AcuInstallerHelper.psd1
+
+      - name: Install Pester
+        run: Install-Module -Name Pester -Force -SkipPublisherCheck
+
+      - name: Test
+        run: Invoke-Pester -Path .\AcuInstallerHelper.Tests\AcuInstallerHelper.Tests.ps1
+
+  publish:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Publish to PowerShell Gallery
+        env:
+          NUGET_API_KEY: ${{ secrets.POWERSHELL_GALLERY_API_KEY }}
+        run: |
+          $version = ${{ github.ref }}
+          Publish-Module -Path AcuInstallerHelper\ -NuGetApiKey ${{ secrets.POWERSHELL_GALLERY_API_KEY }} -Verbose
