@@ -15,8 +15,7 @@ jobs:
 
     - name: Import Built Module
       run: |
-        $path = Join-Path $PSScriptRoot "AcuInstallerHelper"
-        Import-Module "$($path)" -Verbose
+        Import-Module .\AcuInstallerHelper -Verbose
 
     - name: Test
       run: Invoke-Pester -Path .\AcuInstallerHelper.Tests\AcuInstallerHelper.Tests.ps1
