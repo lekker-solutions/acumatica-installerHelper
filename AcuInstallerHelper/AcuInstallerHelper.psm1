@@ -1,3 +1,7 @@
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions_Config.ps1')
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions.ps1')
+
+
 function Add-AcuSiteVersion{
     param (
         [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
