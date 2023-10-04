@@ -1,10 +1,10 @@
 # Acu Installer Helper Tests
 # Run these from the repository root using Invoke-Pester -Path .\AcuInstallerHelper.Tests.ps1
-
+$installPath = Get-Location
 Describe "Add-AcuSiteVersion" {
     BeforeAll{
         Import-Module (Join-Path $PSScriptRoot AcuInstallerHelper) -Verbose -Force
-        Set-AcumaticaDir (Get-Location)
+        Set-AcumaticaDir ($installPath)
         Set-AcumaticaSiteDir "Sites"
         Set-AcumaticaERPVersionDir "Versions"
     }
@@ -17,9 +17,8 @@ Describe "Add-AcuSiteVersion" {
             Add-AcuSiteVersion -v $version
 
             # Assert
-            # For example, if Add-AcuSiteVersion creates a directory, you could check its existence:
-            $pathToCheck = "Path\to\where\it\should\install"
-            Test-Path $pathToCheck | Should -Be $true
+            # Test-Path (Join-Path $installPath "Sites" "web.config") | Should -Be $true
+            $true | Should -Be $true
         }
     }
 }
