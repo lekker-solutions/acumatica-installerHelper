@@ -13,9 +13,9 @@ function Get-AcumaticaSiteDir {
     return $config.AcumaticaSiteDir
 }
 
-function Get-AcumaticaERPVersionDir {
+function Get-AcumaticaVersionDir {
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
-    return $config.AcumaticaERPVersionDir
+    return $config.AcumaticaVersionDir
 }
 
 # Set functions
@@ -39,13 +39,13 @@ function Set-AcumaticaSiteDir {
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 
-function Set-AcumaticaERPVersionDir {
+function Set-AcumaticaVersionDir {
     param(
         [Parameter(Mandatory=$true)]
         [string] $NewPath
     )
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
-    $config.AcumaticaERPVersionDir = $NewPath
+    $config.AcumaticaVersionDir = $NewPath
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 
@@ -53,7 +53,7 @@ function Read-AcuVersionPath {
     param (
         [string]$version
     )
-    return Test-Path (Join-Path Get-AcumaticaDir Get-AcumaticaERPVersionDir $version)
+    return Test-Path (Join-Path Get-AcumaticaDir Get-AcumaticaVersionDir $version)
 }
 
 function Read-DefaultSiteInstallPath{

@@ -2,7 +2,7 @@
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions.ps1')
 
 
-function Add-AcuSiteVersion{
+function Add-AcuVersion{
     param (
         [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
         [switch] [Alias("dt")] $debuggerTools
@@ -59,7 +59,7 @@ function Add-AcuSiteVersion{
     }
 }
 
-function Remove-AcuSiteVersion{
+function Remove-AcuVersion{
     param (
         [string] $version
     )

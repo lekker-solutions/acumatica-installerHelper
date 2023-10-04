@@ -70,17 +70,17 @@ Description = 'Assists with the installation and removal of Acumatica Sites and 
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
-    'Add-AcuSiteVersion',
-    'Remove-AcuSiteVersion',
+    'Add-AcuVersion',
+    'Remove-AcuVersion',
     'Add-AcuSite',
     'Remove-AcuSite',
     'Update-AcuSite',
     'Set-AcumaticaDir',
     'Set-AcumaticaSiteDir',
-    'Set-AcumaticaERPVersionDir',
+    'Set-AcumaticaVersionDir',
     'Get-AcumaticaDir',
     'Get-AcumaticaSiteDir',
-    'Get-AcumaticaERPVersionDir')
+    'Get-AcumaticaVersionDir')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

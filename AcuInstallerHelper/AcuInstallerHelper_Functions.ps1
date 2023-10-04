@@ -3,7 +3,7 @@ function Get-AcuVersionPath{
         [string] $versionNbr
     )
     $acuDir = Get-AcumaticaDir
-    $versionDir = Get-AcumaticaERPVersionDir 
+    $versionDir = Get-AcumaticaVersionDir 
     $fullPath = Join-Path -Path (Join-Path -Path $acuDir -ChildPath $versionDir) -ChildPath $versionNbr
     return $fullPath
 }
