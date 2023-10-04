@@ -80,7 +80,7 @@ function Add-AcuSite{
 
     Test-VersionFormat -version $version
 
-    if (Read-AcuVersionPath -versionNbr $version -eq $false){
+    if (Read-AcuVersionPath $version -eq $false){
         # We need to install a new version
         if (!$installNewVersion){
             # Ask for new version install
@@ -106,7 +106,7 @@ function Add-AcuSite{
     }
 
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)){
-        $siteInstallPath = Get-DefaultSitePath -name $siteName
+        $siteInstallPath = Join-Path (Read-DefaultSiteInstallPath) $siteName
     }
 
     $acuArgs = Build-AcuExeArgs -siteName $siteName -sitePath $siteInstallPath -portal $portal -newInstance

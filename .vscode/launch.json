@@ -1,16 +1,16 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
             "name": "Launch",
             "type": "PowerShell",
             "request": "launch",
-            "script": "${workspaceFolder}\\Launch.ps1", 
-            "cwd": "${workspaceFolder}"
+            "script": "${workspaceFolder}\\Launch.ps1",
+            "cwd": "${workspaceFolder}",
+            "args": [],  // If you need to pass any arguments to the script
+            "stopOnEntry": true, // Stops the debugger on the first line of the script
+            "runspaceId": 1, // Specifies the ID of the runspace to use for debugging. Use 1 for the default runspace.
+            "internalConsoleOptions": "openOnSessionStart" // Opens the debug console automatically when a debugging session starts
         }
     ]
 }

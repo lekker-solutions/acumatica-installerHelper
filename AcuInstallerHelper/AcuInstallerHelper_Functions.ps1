@@ -23,16 +23,6 @@ function Test-AcuVersionPath{
     return Test-Path $fullPath
 }
 
-function Get-DefaultSitePath{
-    param(
-        [string] $siteName
-    )
-    $acuDir = Get-AcumaticaDir
-    $siteDir = Get-AcumaticaSiteDir
-    $fullPath = Join-Path -Path (Join-Path -Path $acuDir -ChildPath $siteDir) -ChildPath $siteName
-    return $fullPath
-}
-
 function Test-VersionFormat {
     param (
         [string] $version
@@ -80,17 +70,25 @@ function Invoke-AcuExe {
         [string[]]$arguments,
         [string]$version
     )
-        <# -- Get Ac.exe --#>
-        $acProcess = Get-AcuConfigurationExe -versionNbr $version
-    
-        if (!(Test-Path $acProcess)){
-            throw "ac.exe not found at $($acProcess)"
-        }
 
-        & $acProcess $arguments
-        if ($LASTEXITCODE -ne 0){
-            throw [System.Exception]("Acumatica Failed to create a site")
-        }
+    <# -- Get Ac.exe --#>
+    $acProcess = Get-AcuConfigurationExe -versionNbr $version
+
+    if (!(Test-Path $acProcess)){
+        throw "ac.exe not found at $($acProcess)"
+    }
+
+    $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+
+    if (-not $IsAdmin) {
+        Write-Error "This script needs to be run as Administrator"
+        Exit
+    }
+    
+    & $acProcess $arguments 2>&1
+    if ($LASTEXITCODE -ne 0){
+        throw [System.Exception]("Acumatica Failed to create a site")
+    }
 }
 
 function Read-SitePathFromRegistryEntry{

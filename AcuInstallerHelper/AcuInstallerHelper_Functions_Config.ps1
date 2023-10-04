@@ -48,3 +48,18 @@ function Set-AcumaticaERPVersionDir {
     $config.AcumaticaERPVersionDir = $NewPath
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
+
+function Read-AcuVersionPath {
+    param (
+        [string]$version
+    )
+    return Test-Path (Join-Path Get-AcumaticaDir Get-AcumaticaERPVersionDir $version)
+}
+
+function Read-DefaultSiteInstallPath{
+    $acuDir = Get-AcumaticaDir
+    $siteDir = Get-AcumaticaSiteDir
+    $fullPath = Join-Path $acuDir $siteDir
+    return $fullPath
+}
+

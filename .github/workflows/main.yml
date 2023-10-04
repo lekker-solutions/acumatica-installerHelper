@@ -24,5 +24,4 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.POWERSHELL_GALLERY_API_KEY }}
         run: |
-          $version = ${{ github.ref }}
-          Publish-Module -Path AcuInstallerHelper\ -NuGetApiKey ${{ secrets.POWERSHELL_GALLERY_API_KEY }} -Verbose
+          Publish-Module -Path AcuInstallerHelper -NuGetApiKey ${{ secrets.POWERSHELL_GALLERY_API_KEY }} -Verbose
