@@ -43,7 +43,7 @@ function Add-AcuSiteVersion{
         Start-Process -FilePath "$env:systemroot\system32\msiexec.exe" -ArgumentList $argumentList -Wait
         $possibleDir = "$($dir)\Acumatica ERP"  # Sometimes it installs here
         if (Test-Path $possibleDir){
-            robocopy $possibleDir $dir /E /COPYALL /NFL /NJH /NJS /NDL /NC /NS
+            robocopy $possibleDir $dir /E /COPY:DA /NFL /NJH /NJS /NDL /NC /NS
             Remove-Item -Recurse -Force $possibleDir
         }
         Write-Output "---- INSTALL SUCCESS ----"
