@@ -1,10 +1,10 @@
 # Acu Installer Helper Tests
 # Run these from the repository root using Invoke-Pester -Path .\AcuInstallerHelper.Tests.ps1
 $installPath = Get-Location
-Describe "Add-AcuSiteVersion" {
+Describe "Add-AcuVersion" {
     BeforeAll{
         Import-Module (Join-Path $PSScriptRoot AcuInstallerHelper) -Verbose -Force
-        Set-AcumaticaDir ($installPath)
+        Set-AcumaticaDir (Get-Location)
         Set-AcumaticaSiteDir "Sites"
         Set-AcumaticaERPVersionDir "Versions"
     }
@@ -14,7 +14,7 @@ Describe "Add-AcuSiteVersion" {
             $version = "23.106.0050"
 
             # Act
-            Add-AcuSiteVersion -v $version
+            Add-AcuVersion -v $version
 
             # Assert
             Test-Path (Join-Path $installPath "Versions" "23.106.0050" "Data") | Should -Be $true
@@ -25,7 +25,7 @@ Describe "Add-AcuSiteVersion" {
 Describe "Add-AcuSite" {
     BeforeAll{
         Import-Module (Join-Path $PSScriptRoot AcuInstallerHelper) -Verbose -Force
-        Set-AcumaticaDir ($installPath)
+        Set-AcumaticaDir (Get-Location)
         Set-AcumaticaSiteDir "Sites"
         Set-AcumaticaERPVersionDir "Versions"
     }
