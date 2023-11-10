@@ -72,6 +72,8 @@ Description = 'Assists with the installation and removal of Acumatica Sites and 
 FunctionsToExport = @(
     'Add-AcuVersion',
     'Remove-AcuVersion',
+    'Get-AcuVersions',
+    'Get-InstalledAcuVersions',
     'Add-AcuSite',
     'Remove-AcuSite',
     'Update-AcuSite',

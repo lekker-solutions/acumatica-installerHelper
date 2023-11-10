@@ -1,72 +1,6 @@
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions_Config.ps1')
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions.ps1')
-
-
-function Add-AcuVersion{
-    param (
-        [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
-        [switch] [Alias("dt")] $debuggerTools
-    )
-
-    Test-VersionFormat $version
-
-    $dir = Get-AcuVersionPath($version)
-    $majRel = $version.Substring(0,4)
-
-    <#-- Download Installer --#>
-    $site = "http://acumatica-builds.s3.amazonaws.com/builds/"
-    $downloadUrl = "{0}{1}/{2}/AcumaticaERP/AcumaticaERPInstall.msi" -f $site, $majRel, $version
-    $tempInstaller = Join-Path $env:TEMP "install.msi"
-
-    <# --  Extract MSI into appropriate folder and rename -- #>
-    Write-Output "Checking for existing Acumatica Install"
-    if (Test-AcuVersionPath -version $version){
-        Write-Output "EXISTING INSTALL FOR THIS VERSION AT $($dir)"
-        return
-    }
-    else {
-        Write-Output "No Existing Install at $($dir), Downloading Installer from builds.acumatica.com"
-        Start-BitsTransfer $downloadUrl $tempInstaller
-        $null = [System.IO.Directory]::CreateDirectory($dir)
-        Write-Output "Directory Created for new Install: $dir"
-    }
-
-    # Install Acumatica and Remove temp installer
-    Write-Output "Installing Acumatica ERP to $($dir)"
-    try {
-        if($debuggerTools){
-            $argumentList = "/a `"$($tempInstaller)`" ADDLOCAL=DEBUGGERTOOLS /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
-        }
-        else{
-            $argumentList = "/a `"$($tempInstaller)`" /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
-        }
-        Start-Process -FilePath "$env:systemroot\system32\msiexec.exe" -ArgumentList $argumentList -Wait
-        $possibleDir = "$($dir)\Acumatica ERP"  # Sometimes it installs here
-        if (Test-Path $possibleDir){
-            robocopy $possibleDir $dir /E /COPY:DA /NFL /NJH /NJS /NDL /NC /NS
-            Remove-Item -Recurse -Force $possibleDir
-        }
-        Write-Output "---- INSTALL SUCCESS ----"
-    }
-    catch {
-        Write-Output "---- INSTALL FAILURE ----"
-        Write-Output $_.Exception.Message
-    }
-    finally {
-        # remove the directory to where the tempinstaller was downloaded
-        Write-Output "Cleaning up Acumatica Installer"
-        Remove-Item $tempInstaller
-    }
-}
-
-function Remove-AcuVersion{
-    param (
-        [string] $version
-    )
-    Test-VersionFormat -version $version
-    $dir = Get-AcuVersionPath($version)
-    Remove-Item -Recurse -Force $dir
-}
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_Versions.ps1')
 
 function Add-AcuSite{
     param (
@@ -79,8 +13,8 @@ function Add-AcuSite{
     )
 
     Test-VersionFormat -version $version
-
-    if (Read-AcuVersionPath $version -eq $false){
+    $versionExists = Read-AcuVersionPath $version
+    if ($versionExists -eq $false){
         # We need to install a new version
         if (!$installNewVersion){
             # Ask for new version install

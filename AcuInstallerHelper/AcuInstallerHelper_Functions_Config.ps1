@@ -53,7 +53,11 @@ function Read-AcuVersionPath {
     param (
         [string]$version
     )
-    return Test-Path (Join-Path Get-AcumaticaDir Get-AcumaticaVersionDir $version)
+    $acumaticaDir = Get-AcumaticaDir;
+    $acuVersonDir = Get-AcumaticaVersionDir
+    $versionPath = (Join-Path $acumaticaDir (Join-Path $acuVersonDir $version))
+    $exists = Test-Path $versionPath;
+    return $exists
 }
 
 function Read-DefaultSiteInstallPath{
