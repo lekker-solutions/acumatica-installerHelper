@@ -30,13 +30,13 @@ function Add-AcuSite{
             return;
         } 
 
-        if ($null -eq $debuggerTools){
+        if (!$debuggerTools){
             # Prompt for debug tools because it was not set
             $debuggerTools = PromptYesNo "Do you want to install debugger tools?"
         }
 
         # Install the new version
-        Add-AcuSiteVersion -debuggerTools $debuggerTools -version $version
+        Add-AcuVersion -debuggerTools $debuggerTools -version $version
     }
 
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)){
