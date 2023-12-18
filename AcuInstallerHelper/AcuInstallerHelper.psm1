@@ -36,7 +36,13 @@ function Add-AcuSite{
         }
 
         # Install the new version
-        Add-AcuVersion -debuggerTools $debuggerTools -version $version
+        if($debuggerTools){
+            Add-AcuVersion -debuggerTools -version $version    
+        }
+        else {
+            Add-AcuVersion -version $version 
+        }
+        
     }
 
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)){
