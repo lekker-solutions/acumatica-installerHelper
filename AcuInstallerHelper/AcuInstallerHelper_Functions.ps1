@@ -20,7 +20,7 @@ function Test-AcuVersionPath{
         [string] $versionNbr
     )
     $fullPath = Get-AcuConfigurationExe -versionNbr $versionNbr
-    return Test-Path $fullPath
+    return (Test-Path $fullPath)
 }
 
 function Test-VersionFormat {

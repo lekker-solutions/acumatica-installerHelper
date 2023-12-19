@@ -1,5 +1,6 @@
 {
   "AcumaticaDir": "E:\\Repos\\acumatica-installerHelper\\TestOutput",
   "AcumaticaSiteDir": "Sites",
-  "AcumaticaVersionDir": "Versions"
+  "AcumaticaVersionDir": "Versions",
+  "AcumaticaNugetRepository" : ""
 }

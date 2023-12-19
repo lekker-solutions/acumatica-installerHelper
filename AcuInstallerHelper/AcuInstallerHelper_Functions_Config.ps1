@@ -18,6 +18,11 @@ function Get-AcuVersionDir {
     return $config.AcumaticaVersionDir
 }
 
+function Get-AcuNugetRepository {
+    $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
+    return $config.AcumaticaNugetRepository
+}
+
 # Set functions
 function Set-AcuDir {
     param(
@@ -46,6 +51,16 @@ function Set-AcuVersionDir {
     )
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
     $config.AcumaticaVersionDir = $NewPath
+    $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
+}
+
+function Set-AcuNugetRepository {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string] $NewUrl
+    )
+    $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
+    $config.AcumaticaNugetRepository = $NewPath
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 

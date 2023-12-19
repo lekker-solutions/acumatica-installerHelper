@@ -1,6 +1,8 @@
 # acumatica-installerHelper
 Acumatica MSI Installer Helper
 
+## Installer Functions
+
 | Function Name               | Parameters                                                        | Description
 |-----------------------------|-------------------------------------------------------------------| -----------------------------------
 | Add-AcuSiteVersion          | - version (alias: v) [string, Mandatory]                          | Downloades a specified acumatica installer from builds.acumatica.com, installs it inside of the AcuERPVersionDir. Debugger tools can be installed with a swtich.
@@ -21,3 +23,11 @@ Acumatica MSI Installer Helper
 | Set-AcuDir                  | - NewPath [string, Mandatory]                                     | Sets the configuration file for the AcuDir
 | Set-AcuSiteDir              | - NewPath [string, Mandatory]                                     | Sets the configuration file for the AcuSiteDir
 | Set-AcuERPVersionDir        | - NewPath [string, Mandatory]                                     | Sets the configuration file for the AcuERPVersionDir   
+
+## Nuget functions
+| Function Name               | Parameters                                                          | Description
+|-----------------------------|---------------------------------------------------------------------| -----------------------------------
+| Push-AcuDllToNuget          | - version (alias: v) [string, Mandatory]                            | This function takes a .dll from an acumatica install, packages it and sends it to a remote repository
+|                             | - dllName (alias: dll) [string, Mandatory]                          |
+|                             | - apiKey (alias: k) [string, Optional]                              |
+|                             | - repositoryURL (alias: url) [string, Optional]                     |
