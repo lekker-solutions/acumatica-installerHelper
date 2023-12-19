@@ -4,12 +4,12 @@ $installPath = Get-Location
 Describe "Add-AcuVersion" {
     BeforeAll{
         Import-Module (Join-Path $PSScriptRoot AcuInstallerHelper) -Verbose -Force
-        Set-AcumaticaDir (Get-Location)
-        Set-AcumaticaSiteDir "Sites"
-        Set-AcumaticaERPVersionDir "Versions"
+        Set-AcuDir (Get-Location)
+        Set-AcuSiteDir "Sites"
+        Set-AcuERPVersionDir "Versions"
     }
     Context "When adding 23R1 site version" {
-        It "Installs the specified Acumatica site version" {
+        It "Installs the specified Acu site version" {
             # Arrange
             $version = "23.106.0050"
 
@@ -25,12 +25,12 @@ Describe "Add-AcuVersion" {
 Describe "Add-AcuSite" {
     BeforeAll{
         Import-Module (Join-Path $PSScriptRoot AcuInstallerHelper) -Verbose -Force
-        Set-AcumaticaDir (Get-Location)
-        Set-AcumaticaSiteDir "Sites"
-        Set-AcumaticaERPVersionDir "Versions"
+        Set-AcuDir (Get-Location)
+        Set-AcuSiteDir "Sites"
+        Set-AcuERPVersionDir "Versions"
     }
     Context "When adding 23R1 site version" {
-        It "Installs the specified Acumatica site version" {
+        It "Installs the specified Acu site version" {
             # Arrange
             $version = "23.106.0050"
 

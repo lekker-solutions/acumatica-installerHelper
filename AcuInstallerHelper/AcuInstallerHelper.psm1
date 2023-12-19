@@ -53,7 +53,7 @@ function Remove-AcuSite{
         [string] [Alias("n")] $siteName
     )
     
-    Write-Output "Removing Acumatica Registry for Site $($siteName)"
+    Write-Output "Removing Acu Registry for Site $($siteName)"
     $version = Get-AcuSiteVersion -siteName $siteName
     $acuArgs = Build-AcuExeArgs -siteName $siteName -d
 

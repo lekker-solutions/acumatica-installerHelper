@@ -18,25 +18,25 @@ function Add-AcuVersion{
     $majRel = $version.Substring(0,4)
 
     <#-- Download Installer --#>
-    $site = "http://acumatica-builds.s3.amazonaws.com/builds/"
-    $downloadUrl = "{0}{1}/{2}/AcumaticaERP/AcumaticaERPInstall.msi" -f $site, $majRel, $version
+    $site = "http://Acu-builds.s3.amazonaws.com/builds/"
+    $downloadUrl = "{0}{1}/{2}/AcuERP/AcuERPInstall.msi" -f $site, $majRel, $version
     $tempInstaller = Join-Path $env:TEMP "install.msi"
 
     <# --  Extract MSI into appropriate folder and rename -- #>
-    Write-Output "Checking for existing Acumatica Install"
+    Write-Output "Checking for existing Acu Install"
     if (Test-AcuVersionPath -version $version){
         Write-Output "EXISTING INSTALL FOR THIS VERSION AT $($dir)"
         return
     }
     else {
-        Write-Output "No Existing Install at $($dir), Downloading Installer from builds.acumatica.com"
+        Write-Output "No Existing Install at $($dir), Downloading Installer from builds.Acu.com"
         Start-BitsTransfer $downloadUrl $tempInstaller
         $null = [System.IO.Directory]::CreateDirectory($dir)
         Write-Output "Directory Created for new Install: $dir"
     }
 
-    # Install Acumatica and Remove temp installer
-    Write-Output "Installing Acumatica ERP to $($dir)"
+    # Install Acu and Remove temp installer
+    Write-Output "Installing Acu ERP to $($dir)"
     try {
         if($debuggerTools){
             $argumentList = "/a `"$($tempInstaller)`" ADDLOCAL=DEBUGGERTOOLS /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
@@ -45,7 +45,7 @@ function Add-AcuVersion{
             $argumentList = "/a `"$($tempInstaller)`" /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
         }
         Start-Process -FilePath "$env:systemroot\system32\msiexec.exe" -ArgumentList $argumentList -Wait
-        $possibleDir = "$($dir)\Acumatica ERP"  # Sometimes it installs here
+        $possibleDir = "$($dir)\Acu ERP"  # Sometimes it installs here
         if (Test-Path $possibleDir){
             robocopy $possibleDir $dir /E /COPY:DA /NFL /NJH /NJS /NDL /NC /NS
             Remove-Item -Recurse -Force $possibleDir
@@ -58,7 +58,7 @@ function Add-AcuVersion{
     }
     finally {
         # remove the directory to where the tempinstaller was downloaded
-        Write-Output "Cleaning up Acumatica Installer"
+        Write-Output "Cleaning up Acu Installer"
         Remove-Item $tempInstaller
     }
 }
@@ -114,7 +114,7 @@ function Get-S3Keys {
     )
 
     # Base URL
-    $baseUrl = "http://acumatica-builds.s3.amazonaws.com/?list-type=2"
+    $baseUrl = "http://Acu-builds.s3.amazonaws.com/?list-type=2"
 
     # Add continuation token to URL if provided
     if ($ContinuationToken) {
@@ -132,10 +132,10 @@ function Get-S3Keys {
 
     # Extract keys and continuation token
     if ($preview){
-        $match = '(?<prefix>builds/preview/)?(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcumaticaERP/AcumaticaERPInstall.msi'
+        $match = '(?<prefix>builds/preview/)?(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcuERP/AcuERPInstall.msi'
     }
     else{
-        $match = '(?<prefix>builds/)?(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcumaticaERP/AcumaticaERPInstall.msi'
+        $match = '(?<prefix>builds/)?(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcuERP/AcuERPInstall.msi'
     }
 
     $keys = $xml.ListBucketResult.Contents.Key | ForEach-Object {
@@ -154,7 +154,7 @@ function Get-S3Keys {
 
 
 function Get-InstalledAcuVersions {
-    $dir = Get-AcumaticaVersionDir;
+    $dir = Get-AcuVersionDir;
     Get-ChildItem -Directory -Path $dir | Format-Table @{L=’Installed Version’;E={$_.Name}} -AutoSize
 }
 

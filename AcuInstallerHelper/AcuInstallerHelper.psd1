@@ -30,7 +30,7 @@ CompanyName = 'Lekker Solutions LLC'
 Copyright = '(c) Kyle Vanderstoep. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Assists with the installation and removal of Acumatica Sites and Versions'
+Description = 'Assists with the installation and removal of Acu Sites and Versions'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -77,12 +77,12 @@ FunctionsToExport = @(
     'Add-AcuSite',
     'Remove-AcuSite',
     'Update-AcuSite',
-    'Set-AcumaticaDir',
-    'Set-AcumaticaSiteDir',
-    'Set-AcumaticaVersionDir',
-    'Get-AcumaticaDir',
-    'Get-AcumaticaSiteDir',
-    'Get-AcumaticaVersionDir')
+    'Set-AcuDir',
+    'Set-AcuSiteDir',
+    'Set-AcuVersionDir',
+    'Get-AcuDir',
+    'Get-AcuSiteDir',
+    'Get-AcuVersionDir')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

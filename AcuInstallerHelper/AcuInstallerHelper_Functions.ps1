@@ -2,8 +2,8 @@ function Get-AcuVersionPath{
     param(
         [string] $versionNbr
     )
-    $acuDir = Get-AcumaticaDir
-    $versionDir = Get-AcumaticaVersionDir 
+    $acuDir = Get-AcuDir
+    $versionDir = Get-AcuVersionDir 
     $fullPath = Join-Path -Path (Join-Path -Path $acuDir -ChildPath $versionDir) -ChildPath $versionNbr
     return $fullPath
 }
@@ -87,14 +87,14 @@ function Invoke-AcuExe {
     
     & $acProcess $arguments 2>&1
     if ($LASTEXITCODE -ne 0){
-        throw [System.Exception]("Acumatica Failed to create a site")
+        throw [System.Exception]("Acu Failed to create a site")
     }
 }
 
 function Read-SitePathFromRegistryEntry{
     param([string] $siteName)
     
-    $key = "HKLM:\SOFTWARE\Acumatica ERP\$($siteName)"
+    $key = "HKLM:\SOFTWARE\Acu ERP\$($siteName)"
     if (-not (Test-Path $key)){
         throw "No registry key for site $($siteName) exists"
     }
