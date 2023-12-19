@@ -18,8 +18,8 @@ function Add-AcuVersion{
     $majRel = $version.Substring(0,4)
 
     <#-- Download Installer --#>
-    $site = "http://Acu-builds.s3.amazonaws.com/builds/"
-    $downloadUrl = "{0}{1}/{2}/AcuERP/AcuERPInstall.msi" -f $site, $majRel, $version
+    $site = "https://acumatica-builds.s3.amazonaws.com/builds/"
+    $downloadUrl = "{0}{1}/{2}/AcumaticaERP/AcumaticaERPInstall.msi" -f $site, $majRel, $version
     $tempInstaller = Join-Path $env:TEMP "install.msi"
 
     <# --  Extract MSI into appropriate folder and rename -- #>
@@ -45,7 +45,7 @@ function Add-AcuVersion{
             $argumentList = "/a `"$($tempInstaller)`" /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
         }
         Start-Process -FilePath "$env:systemroot\system32\msiexec.exe" -ArgumentList $argumentList -Wait
-        $possibleDir = "$($dir)\Acu ERP"  # Sometimes it installs here
+        $possibleDir = "$($dir)\Acumatica ERP"  # Sometimes it installs here
         if (Test-Path $possibleDir){
             robocopy $possibleDir $dir /E /COPY:DA /NFL /NJH /NJS /NDL /NC /NS
             Remove-Item -Recurse -Force $possibleDir

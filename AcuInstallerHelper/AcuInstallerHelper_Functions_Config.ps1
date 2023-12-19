@@ -5,17 +5,17 @@ function Get-ModuleBase{
 # Get functions
 function Get-AcuDir {
     $config = Get-Content -Path (Get-ModuleBase) | ConvertFrom-Json
-    return $config.AcuDir
+    return $config.AcumaticaDir
 }
 
 function Get-AcuSiteDir {
     $config = Get-Content -Path (Get-ModuleBase) | ConvertFrom-Json
-    return $config.AcuSiteDir
+    return $config.AcumaticaSiteDir
 }
 
 function Get-AcuVersionDir {
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
-    return $config.AcuVersionDir
+    return $config.AcumaticaVersionDir
 }
 
 # Set functions
@@ -25,7 +25,7 @@ function Set-AcuDir {
         [string] $NewPath
     )
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
-    $config.AcuDir = $NewPath
+    $config.AcumaticaDir = $NewPath
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 
@@ -35,7 +35,7 @@ function Set-AcuSiteDir {
         [string] $NewPath
     )
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
-    $config.AcuSiteDir = $NewPath
+    $config.AcumaticaSiteDir = $NewPath
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 
@@ -45,7 +45,7 @@ function Set-AcuVersionDir {
         [string] $NewPath
     )
     $config = Get-Content -Path (Get-ModuleBase)  | ConvertFrom-Json
-    $config.AcuVersionDir = $NewPath
+    $config.AcumaticaVersionDir = $NewPath
     $config | ConvertTo-Json | Set-Content -Path (Get-ModuleBase) 
 }
 

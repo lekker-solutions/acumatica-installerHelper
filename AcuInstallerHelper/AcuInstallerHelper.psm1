@@ -1,6 +1,7 @@
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions_Config.ps1')
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions.ps1')
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Versions.ps1')
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_Nuget.ps1')
 
 function Add-AcuSite{
     param (
@@ -36,7 +37,13 @@ function Add-AcuSite{
         }
 
         # Install the new version
-        Add-AcuVersion -debuggerTools $debuggerTools -version $version
+        if($debuggerTools){
+            Add-AcuVersion -debuggerTools -version $version    
+        }
+        else {
+            Add-AcuVersion -version $version 
+        }
+        
     }
 
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)){

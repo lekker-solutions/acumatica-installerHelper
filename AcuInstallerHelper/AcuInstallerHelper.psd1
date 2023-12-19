@@ -12,7 +12,7 @@
 RootModule = 'AcuInstallerHelper.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.6.4'
+ModuleVersion = '0.6.6'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -108,13 +108,13 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @('Acumatica')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://www.gnu.org/licenses/gpl-3.0.html#license-text'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/lekker-solutions/acumatica-installerHelper'
 
         # A URL to an icon representing this module.
         # IconUri = ''
@@ -136,7 +136,7 @@ PrivateData = @{
 } # End of PrivateData hashtable
 
 # HelpInfo URI of this module
-# HelpInfoURI = ''
+HelpInfoURI = 'https://github.com/lekker-solutions/acumatica-installerHelper/blob/main/README.md'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
