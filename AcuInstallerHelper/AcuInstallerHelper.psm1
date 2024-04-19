@@ -3,21 +3,22 @@
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Versions.ps1')
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Nuget.ps1')
 
-function Add-AcuSite{
+function Add-AcuSite {
     param (
-        [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
-        [string] [Parameter(Mandatory=$true)] [Alias("n")] $siteName,
+        [string] [Parameter(Mandatory = $true)] [Alias("v")] $version,
+        [string] [Parameter(Mandatory = $true)] [Alias("n")] $siteName,
         [string] [Alias("p")] $siteInstallPath,
         [switch] [Alias("nv")] $installNewVersion,
         [switch] [Alias("pt")] $portal,
+        [switch] $preview,
         [bool] [Alias("dt")] $debuggerTools
     )
 
     Test-VersionFormat -version $version
     $versionExists = Read-AcuVersionPath $version
-    if ($versionExists -eq $false){
+    if ($versionExists -eq $false) {
         # We need to install a new version
-        if (!$installNewVersion){
+        if (!$installNewVersion) {
             # Ask for new version install
             $installResponse = PromptYesNo "You do not have version $($version) installed, do you want to install?"
         }
@@ -25,28 +26,38 @@ function Add-AcuSite{
             $installResponse = $installNewVersion
         }
  
-        if (!$installResponse){
+        if (!$installResponse) {
             # Cancel entire run
             Write-Output "Site install cancelled"
             return;
         } 
 
-        if (!$debuggerTools){
+        if (!$debuggerTools) {
             # Prompt for debug tools because it was not set
             $debuggerTools = PromptYesNo "Do you want to install debugger tools?"
         }
 
         # Install the new version
-        if($debuggerTools){
-            Add-AcuVersion -debuggerTools -version $version    
+        if ($preview) {
+            if ($debuggerTools) {
+                Add-AcuVersion -debuggerTools -version $version -preview   
+            }
+            else {
+                Add-AcuVersion -version $version -preview
+            }
         }
         else {
-            Add-AcuVersion -version $version 
+            if ($debuggerTools) {
+                Add-AcuVersion -debuggerTools -version $version   
+            }
+            else {
+                Add-AcuVersion -version $version
+            }
         }
         
     }
 
-    if ([string]::IsNullOrWhiteSpace($siteInstallPath)){
+    if ([string]::IsNullOrWhiteSpace($siteInstallPath)) {
         $siteInstallPath = Join-Path (Read-DefaultSiteInstallPath) $siteName
     }
 
@@ -55,7 +66,7 @@ function Add-AcuSite{
     Write-Output "Site Installed"
 }
 
-function Remove-AcuSite{
+function Remove-AcuSite {
     param (
         [string] [Alias("n")] $siteName
     )
@@ -67,7 +78,7 @@ function Remove-AcuSite{
     Invoke-AcuExe -arguments $acuArgs -version $version
 }
 
-function Update-AcuSite{
+function Update-AcuSite {
     param (
         [string] $siteName,
         [string] $newVersion

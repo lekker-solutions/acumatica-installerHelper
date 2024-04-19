@@ -9,7 +9,8 @@
 function Add-AcuVersion{
     param (
         [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
-        [switch] [Alias("dt")] $debuggerTools
+        [switch] [Alias("dt")] $debuggerTools,
+        [switch] $preview
     )
 
     Test-VersionFormat $version
@@ -18,7 +19,13 @@ function Add-AcuVersion{
     $majRel = $version.Substring(0,4)
 
     <#-- Download Installer --#>
-    $site = "https://acumatica-builds.s3.amazonaws.com/builds/"
+    if($true -eq $preview){
+        $site = "https://acumatica-builds.s3.amazonaws.com/builds/preview/"
+    }
+    else {
+        $site = "https://acumatica-builds.s3.amazonaws.com/builds/"
+    }
+    
     $downloadUrl = "{0}{1}/{2}/AcumaticaERP/AcumaticaERPInstall.msi" -f $site, $majRel, $version
     $tempInstaller = Join-Path $env:TEMP "install.msi"
 
@@ -29,7 +36,7 @@ function Add-AcuVersion{
         return
     }
     else {
-        Write-Output "No Existing Install at $($dir), Downloading Installer from builds.Acu.com"
+        Write-Output "No Existing Install at $($dir), Downloading Installer from $downloadUrl"
         Start-BitsTransfer $downloadUrl $tempInstaller
         $null = [System.IO.Directory]::CreateDirectory($dir)
         Write-Output "Directory Created for new Install: $dir"
