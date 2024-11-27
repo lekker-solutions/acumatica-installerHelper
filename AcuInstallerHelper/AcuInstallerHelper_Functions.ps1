@@ -191,3 +191,17 @@ function Build-AcuExeArgs {
     $arguments;
 }
 
+function Test-Url {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Url
+    )
+
+    try {
+        $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 10 -Method Head
+        return $response.StatusCode -eq 200
+    } catch {
+        return $false
+    }
+}
+

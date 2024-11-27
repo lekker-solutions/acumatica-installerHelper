@@ -17,7 +17,11 @@ function Add-AcuVersion{
 
     $dir = Get-AcuVersionPath($version)
     $majRel = $version.Substring(0,4)
-
+    if ($majRel -match "\.0$") {
+        # Replace .0 with .1
+        $majRel = $majRel -replace "\.0$", ".1"
+    }
+    
     <#-- Download Installer --#>
     if($true -eq $preview){
         $site = "https://acumatica-builds.s3.amazonaws.com/builds/preview/"
@@ -37,6 +41,40 @@ function Add-AcuVersion{
     }
     else {
         Write-Output "No Existing Install at $($dir), Downloading Installer from $downloadUrl"
+
+        $test = Test-Url -url $downloadUrl;
+        if ($test -eq $false) {
+            if ($preview) {
+                # If preview is true and the test URL fails, check the normal URL
+                $normalUrl = $downloadUrl -replace "/preview", ""
+                $test = Test-Url -url $normalUrl;
+                if ($test -eq $false) {
+                    throw "No Preview or Normal Build found for $version"
+                } else {
+                    # Found a build at the normal URL
+                    $response = PromptYesNo "No Preview Build found for $version, do you want to install the normal build?"
+                    if($response -eq $false){
+                        throw "No Preview Build found for $version"
+                    }
+                    $downloadUrl = $normalUrl
+                }
+            } else {
+                # If preview is false and the test URL fails, check the preview URL
+                $previewUrl = $downloadUrl -replace "/builds/", "/builds/preview/"
+                $test = Test-Url -url $previewUrl;
+                if ($test  -eq $false) {
+                    throw "No Preview or Normal Build found for $version"
+                } else {
+                    $response = PromptYesNo "No Normal Build found for $version, do you want to install the preview build?"
+                    if($response -eq $false){
+                        throw "No Normal Build found for $version"
+                    }
+                    # Found a build at the preview URL
+                    $downloadUrl = $previewUrl
+                }
+            }
+        }
+        
         Start-BitsTransfer $downloadUrl $tempInstaller
         $null = [System.IO.Directory]::CreateDirectory($dir)
         Write-Output "Directory Created for new Install: $dir"
