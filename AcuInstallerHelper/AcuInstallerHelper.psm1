@@ -2,6 +2,7 @@
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Functions.ps1')
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Versions.ps1')
 . (Join-Path $PSScriptRoot 'AcuInstallerHelper_Nuget.ps1')
+. (Join-Path $PSScriptRoot 'AcuInstallerHelper_web_config.ps1')
 
 function Add-AcuSite {
     param (
@@ -10,59 +11,42 @@ function Add-AcuSite {
         [string] [Alias("p")] $siteInstallPath,
         [switch] [Alias("nv")] $installNewVersion,
         [switch] [Alias("pt")] $portal,
+        [switch] [Alias("d")] $devSite,
         [switch] $preview,
-        [bool] [Alias("dt")] $debuggerTools
+        [switch] [Alias("dt")] $debuggerTools
     )
 
-    Test-VersionFormat -version $version
-    $versionExists = Read-AcuVersionPath $version
-    if ($versionExists -eq $false) {
-        # We need to install a new version
-        if (!$installNewVersion) {
-            # Ask for new version install
-            $installResponse = PromptYesNo "You do not have version $($version) installed, do you want to install?"
-        }
-        else {
-            $installResponse = $installNewVersion
-        }
- 
-        if (!$installResponse) {
-            # Cancel entire run
-            Write-Output "Site install cancelled"
-            return;
-        } 
-
-        if (!$debuggerTools) {
-            # Prompt for debug tools because it was not set
-            $debuggerTools = PromptYesNo "Do you want to install debugger tools?"
-        }
-
-        # Install the new version
-        if ($preview) {
-            if ($debuggerTools) {
-                Add-AcuVersion -debuggerTools -version $version -preview   
-            }
-            else {
-                Add-AcuVersion -version $version -preview
-            }
-        }
-        else {
-            if ($debuggerTools) {
-                Add-AcuVersion -debuggerTools -version $version   
-            }
-            else {
-                Add-AcuVersion -version $version
-            }
-        }
-        
-    }
-
+    #Test-VersionFormat -version $version
+    #$versionExists = Read-AcuVersionPath $version
+    #if ($versionExists -eq $false) {
+    #    # We need to install a new version
+    #    if (!$installNewVersion) {
+    #        # Ask for new version install
+    #        $installResponse = PromptYesNo "You do not have version $($version) installed, do you want to install?"
+    #    }
+    #    else {
+    #        $installResponse = $installNewVersion
+    #    }
+ #
+    #    if (!$installResponse) {
+    #        # Cancel entire run
+    #        Write-Output "Site install cancelled"
+    #        return;
+    #    } 
+#
+    #    # Install the new version
+    #    Add-AcuVersion -debuggerTools:$debuggerTools -version:$version -preview:$preview
+    #}
+#
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)) {
         $siteInstallPath = Join-Path (Read-DefaultSiteInstallPath) $siteName
     }
 
-    $acuArgs = Build-AcuExeArgs -siteName $siteName -sitePath $siteInstallPath -portal $portal -newInstance
-    Invoke-AcuExe -arguments $acuArgs -version $version
+    #$acuArgs = Build-AcuExeArgs -siteName $siteName -sitePath $siteInstallPath -portal $portal -newInstance
+    #Invoke-AcuExe -arguments $acuArgs -version $version
+    if($devSite) {
+        Update-WebConfigForDev -webConfigPath (Join-Path $siteInstallPath "web.config")
+    }
     Write-Output "Site Installed"
 }
 
