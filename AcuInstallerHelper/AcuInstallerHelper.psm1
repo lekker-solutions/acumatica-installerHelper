@@ -42,8 +42,8 @@ function Add-AcuSite {
         $siteInstallPath = Join-Path (Read-DefaultSiteInstallPath) $siteName
     }
 
-    #$acuArgs = Build-AcuExeArgs -siteName $siteName -sitePath $siteInstallPath -portal $portal -newInstance
-    #Invoke-AcuExe -arguments $acuArgs -version $version
+    $acuArgs = Build-AcuExeArgs -siteName $siteName -sitePath $siteInstallPath -portal $portal -newInstance
+    Invoke-AcuExe -arguments $acuArgs -version $version
     if($devSite) {
         Update-WebConfigForDev -webConfigPath (Join-Path $siteInstallPath "web.config")
     }
