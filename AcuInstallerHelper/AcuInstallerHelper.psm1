@@ -16,28 +16,28 @@ function Add-AcuSite {
         [switch] [Alias("dt")] $debuggerTools
     )
 
-    #Test-VersionFormat -version $version
-    #$versionExists = Read-AcuVersionPath $version
-    #if ($versionExists -eq $false) {
-    #    # We need to install a new version
-    #    if (!$installNewVersion) {
-    #        # Ask for new version install
-    #        $installResponse = PromptYesNo "You do not have version $($version) installed, do you want to install?"
-    #    }
-    #    else {
-    #        $installResponse = $installNewVersion
-    #    }
- #
-    #    if (!$installResponse) {
-    #        # Cancel entire run
-    #        Write-Output "Site install cancelled"
-    #        return;
-    #    } 
-#
-    #    # Install the new version
-    #    Add-AcuVersion -debuggerTools:$debuggerTools -version:$version -preview:$preview
-    #}
-#
+    Test-VersionFormat -version $version
+    $versionExists = Read-AcuVersionPath $version
+    if ($versionExists -eq $false) {
+        # We need to install a new version
+        if (!$installNewVersion) {
+            # Ask for new version install
+            $installResponse = PromptYesNo "You do not have version $($version) installed, do you want to install?"
+        }
+        else {
+            $installResponse = $installNewVersion
+        }
+ 
+        if (!$installResponse) {
+            # Cancel entire run
+            Write-Output "Site install cancelled"
+            return;
+        } 
+
+        # Install the new version
+        Add-AcuVersion -debuggerTools:$debuggerTools -version:$version -preview:$preview
+    }
+
     if ([string]::IsNullOrWhiteSpace($siteInstallPath)) {
         $siteInstallPath = Join-Path (Read-DefaultSiteInstallPath) $siteName
     }
