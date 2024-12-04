@@ -10,7 +10,7 @@ function Add-AcuVersion{
     param (
         [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
         [switch] [Alias("dt")] $debuggerTools,
-        [switch] [Alias("pv")] $preview
+        [switch] [Alias("p")] $preview
     )
 
     Test-VersionFormat $version
