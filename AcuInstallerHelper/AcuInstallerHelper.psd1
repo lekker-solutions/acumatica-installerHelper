@@ -12,7 +12,7 @@
 RootModule = 'AcuInstallerHelper.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.6.92'
+ModuleVersion = '0.6.93'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
