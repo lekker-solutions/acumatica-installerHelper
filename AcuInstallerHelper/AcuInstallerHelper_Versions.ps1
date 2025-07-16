@@ -5,107 +5,181 @@
 #          Remove-AcuVersion
 # ----------------------------------------
 
-
-function Add-AcuVersion{
+function Add-AcuVersion {
     param (
-        [string] [Parameter(Mandatory=$true)] [Alias("v")] $version,
-        [switch] [Alias("dt")] $debuggerTools,
-        [switch] [Alias("p")] $preview
+        [Parameter(Mandatory = $true)]
+        [Alias("v")]
+        [string] $version,
+        
+        [Alias("dt")]
+        [switch] $debuggerTools,
+        
+        [Alias("p")]
+        [switch] $preview
     )
 
+    Write-AcuHeader -Title "Acumatica Version Installation" -Subtitle "Version $version"
+    
+    Write-AcuSection -Title "Validating Version"
+    
     Test-VersionFormat $version
-
-    $dir = Get-AcuVersionPath($version)
-    $majRel = $version.Substring(0,4)
-    if ($majRel -match "\.0$") {
-        # Replace .0 with .1
-        $majRel = $majRel -replace "\.0$", ".1"
-    }
+    Write-AcuSuccess "Version format validated: $version"
     
-    <#-- Download Installer --#>
-    if($true -eq $preview){
-        $site = "https://acumatica-builds.s3.amazonaws.com/builds/preview/"
-    }
-    else {
-        $site = "https://acumatica-builds.s3.amazonaws.com/builds/"
-    }
-    
-    $downloadUrl = "{0}{1}/{2}/AcumaticaERP/AcumaticaERPInstall.msi" -f $site, $majRel, $version
-    $tempInstaller = Join-Path $env:TEMP "install.msi"
-
-    <# --  Extract MSI into appropriate folder and rename -- #>
-    Write-Output "Checking for existing Acu Install"
-    if (Test-AcuVersionPath -version $version){
-        Write-Output "EXISTING INSTALL FOR THIS VERSION AT $($dir)"
+    # Check if already installed
+    if (Test-AcuVersionPath -versionNbr $version) {
+        $existingPath = Get-AcuVersionPath -versionNbr $version
+        Write-AcuWarning "Version $version already installed at $existingPath"
+        
+        Write-AcuSummary -Operation "Version Installation" -Status "Already Installed" -Details @{
+            "Version" = $version
+            "Path"    = $existingPath
+        }
         return
     }
-    else {
-        Write-Output "No Existing Install at $($dir), Downloading Installer from $downloadUrl"
-
-        $test = Test-Url -url $downloadUrl;
-        if ($test -eq $false) {
-            if ($preview) {
-                # If preview is true and the test URL fails, check the normal URL
-                $normalUrl = $downloadUrl -replace "/preview", ""
-                $test = Test-Url -url $normalUrl;
-                if ($test -eq $false) {
-                    throw "No Preview or Normal Build found for $version"
-                } else {
-                    # Found a build at the normal URL
-                    $response = PromptYesNo "No Preview Build found for $version, do you want to install the normal build?"
-                    if($response -eq $false){
-                        throw "No Preview Build found for $version"
-                    }
-                    $downloadUrl = $normalUrl
-                }
-            } else {
-                # If preview is false and the test URL fails, check the preview URL
-                $previewUrl = $downloadUrl -replace "/builds/", "/builds/preview/"
-                $test = Test-Url -url $previewUrl;
-                if ($test  -eq $false) {
-                    throw "No Preview or Normal Build found for $version"
-                } else {
-                    $response = PromptYesNo "No Normal Build found for $version, do you want to install the preview build?"
-                    if($response -eq $false){
-                        throw "No Normal Build found for $version"
-                    }
-                    # Found a build at the preview URL
-                    $downloadUrl = $previewUrl
-                }
-            }
-        }
-        
-        Start-BitsTransfer $downloadUrl $tempInstaller
-        $null = [System.IO.Directory]::CreateDirectory($dir)
-        Write-Output "Directory Created for new Install: $dir"
+    
+    Write-AcuSection -Title "Locating Installation Package"
+    
+    # Build download URL
+    $downloadUrl = Get-AcumaticaDownloadUrl -version $version -preview $preview
+    if (!$downloadUrl) {
+        Write-AcuError "No build found for version $version"
+        throw "No build found for version $version"
     }
-
-    # Install Acu and Remove temp installer
-    Write-Output "Installing Acu ERP to $($dir)"
+    
+    Write-AcuSuccess "Installation package located: $downloadUrl"
+    
+    # Download and install
+    $tempInstaller = Join-Path $env:TEMP "AcumaticaERPInstall_$version.msi"
+    
+    Write-AcuSection -Title "Downloading and Installing"
+    
     try {
-        if($debuggerTools){
-            $argumentList = "/a `"$($tempInstaller)`" ADDLOCAL=DEBUGGERTOOLS /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
-        }
-        else{
-            $argumentList = "/a `"$($tempInstaller)`" /qn TARGETDIR=`"$dir`" /passive /l `"$($dir)\log.txt`""
-        }
-        Start-Process -FilePath "$env:systemroot\system32\msiexec.exe" -ArgumentList $argumentList -Wait
-        $possibleDir = "$($dir)\Acumatica ERP"  # Sometimes it installs here
-        if (Test-Path $possibleDir){
-            robocopy $possibleDir $dir /E /COPY:DA /NFL /NJH /NJS /NDL /NC /NS
-            Remove-Item -Recurse -Force $possibleDir
-        }
-        Write-Output "---- INSTALL SUCCESS ----"
-    }
-    catch {
-        Write-Output "---- INSTALL FAILURE ----"
-        Write-Output $_.Exception.Message
+        Write-AcuStep "Downloading installer package" -Step 1 -Total 2
+        Start-BitsTransfer $downloadUrl $tempInstaller
+        Write-AcuSuccess "Download completed successfully"
+        
+        Write-AcuStep "Installing Acumatica version" -Step 2 -Total 2
+        Install-AcumaticaVersion -installerPath $tempInstaller -version $version -debuggerTools $debuggerTools
     }
     finally {
-        # remove the directory to where the tempinstaller was downloaded
-        Write-Output "Cleaning up Acu Installer"
-        Remove-Item $tempInstaller
+        if (Test-Path $tempInstaller) {
+            Write-AcuDebug "Cleaning up temporary installer file"
+            Remove-Item $tempInstaller -Force
+        }
     }
+    
+    Write-AcuSummary -Operation "Version Installation" -Status "Completed Successfully" -Details @{
+        "Version"     = $version
+        "Path"        = Get-AcuVersionPath -versionNbr $version
+        "Build Type"  = $(if ($preview) { "Preview" } else { "Release" })
+        "Debug Tools" = $(if ($debuggerTools) { "Included" } else { "Not included" })
+    }
+}
+
+function Get-AcumaticaDownloadUrl {
+    param (
+        [string] $version,
+        [bool] $preview
+    )
+    
+    Write-AcuDebug "Building download URL for version: $version"
+    
+    $majorRelease = $version.Substring(0, 4)
+    if ($majorRelease -match "\.0$") {
+        $majorRelease = $majorRelease -replace "\.0$", ".1"
+    }
+    
+    Write-AcuDebug "Major release determined: $majorRelease"
+    
+    # Try preview first if requested
+    if ($preview) {
+        Write-AcuDebug "Preview build requested, checking preview URLs first"
+        $urls = @(
+            "https://acumatica-builds.s3.amazonaws.com/builds/preview/$majorRelease/$version/AcumaticaERP/AcumaticaERPInstall.msi",
+            "https://acumatica-builds.s3.amazonaws.com/builds/$majorRelease/$version/AcumaticaERP/AcumaticaERPInstall.msi"
+        )
+    }
+    else {
+        Write-AcuDebug "Release build requested, checking release URLs first"
+        $urls = @(
+            "https://acumatica-builds.s3.amazonaws.com/builds/$majorRelease/$version/AcumaticaERP/AcumaticaERPInstall.msi",
+            "https://acumatica-builds.s3.amazonaws.com/builds/preview/$majorRelease/$version/AcumaticaERP/AcumaticaERPInstall.msi"
+        )
+    }
+    
+    foreach ($url in $urls) {
+        Write-AcuDebug "Testing URL: $url"
+        if (Test-Url -Url $url) {
+            $isPreview = $url -match "/preview/"
+            Write-AcuDebug "URL accessible, build type: $(if ($isPreview) { 'Preview' } else { 'Release' })"
+            
+            $prompt = if ($preview -and !$isPreview) {
+                "No preview build found. Use normal build?"
+            }
+            elseif (!$preview -and $isPreview) {
+                "No normal build found. Use preview build?"
+            }
+            else {
+                $null
+            }
+            
+            if (!$prompt -or (PromptYesNo $prompt)) {
+                Write-AcuDebug "Selected URL: $url"
+                return $url
+            }
+        }
+    }
+    
+    Write-AcuDebug "No accessible URLs found"
+    return $null
+}
+
+function Install-AcumaticaVersion {
+    param (
+        [string] $installerPath,
+        [string] $version,
+        [bool] $debuggerTools
+    )
+    
+    Write-AcuDebug "Starting installation process"
+    
+    $targetDir = Get-AcuVersionPath -versionNbr $version
+    $null = [System.IO.Directory]::CreateDirectory($targetDir)
+    
+    Write-AcuInfo "Installing Acumatica ERP to: $targetDir"
+    
+    $features = ""
+    if ($debuggerTools) {
+        Write-AcuInfo "Including Debugger Tools in installation"
+        $features = "ADDLOCAL=DEBUGGERTOOLS"
+    }
+
+    $argumentList = "/a `"$installerPath`" $features /qn TARGETDIR=`"$targetDir`" /passive /l `"$targetDir\install.log`""
+    
+    Write-AcuDebug "MSI arguments: $argumentList"
+    Write-AcuStep "Executing MSI installer"
+    
+    $process = Start-Process -FilePath "msiexec.exe" -ArgumentList $argumentList -Wait -PassThru
+    
+    if ($process.ExitCode -ne 0) {
+        Write-AcuError "Installation failed with exit code: $($process.ExitCode)"
+        Write-AcuDebug "Check installation log at: $targetDir\install.log"
+        throw "Installation failed with exit code $($process.ExitCode). Check log at $targetDir\install.log"
+    }
+    
+    Write-AcuSuccess "MSI installation completed successfully"
+    
+    # Handle nested installation directory
+    $nestedDir = Join-Path $targetDir "Acumatica ERP"
+    if (Test-Path $nestedDir) {
+        Write-AcuStep "Reorganizing installation directory structure"
+        Write-AcuDebug "Moving files from nested directory: $nestedDir"
+        robocopy $nestedDir $targetDir /E /MOVE /NFL /NDL /NJH /NJS
+        Remove-Item $nestedDir -Force -ErrorAction SilentlyContinue
+        Write-AcuSuccess "Directory structure reorganized"
+    }
+    
+    Write-AcuSuccess "Installation completed successfully"
 }
 
 function Get-AcuVersions {
@@ -114,100 +188,191 @@ function Get-AcuVersions {
         [switch] $preview
     )
 
-    # Initialize dictionary
-    $allKeys = @{}
-
+    Write-AcuHeader -Title "Available Acumatica Versions" -Subtitle $(if ($preview) { "Preview Builds" } else { "Release Builds" })
+    
+    Write-AcuSection -Title "Retrieving Version Information"
+    
+    $allVersions = @{}
+    $token = $null
+    $pageCount = 0
+    
     do {
-        # Get keys from S3
-        $result = Get-S3Keys -ContinuationToken $token
+        $pageCount++
+        Write-AcuStep "Fetching page $pageCount of version data"
+        
+        $result = Get-S3Keys -ContinuationToken $token -Preview:$preview
+        
         foreach ($key in $result.Keys) {
-            # Create a unique identifier for the dictionary
-            $dictKey = $key.MinorVersion
-
-            # Check if the key already exists to avoid duplicates
-            if (-not $allKeys.ContainsKey($dictKey)) {
-                $allKeys[$dictKey] = $key
+            if (!$allVersions.ContainsKey($key.MinorVersion)) {
+                $allVersions[$key.MinorVersion] = $key
             }
         }
-
+        
         $token = $result.NextToken
     } while ($token)
-
-
-    # Custom function to convert version string to a Version object for sorting
-    function ConvertTo-Version([string]$versionString) {
-        $versionParts = $versionString -split '\.' | ForEach-Object { [int]$_ }
-        while ($versionParts.Count -lt 4) {
-            $versionParts += 0
-        }
-        return [Version]::new($versionParts[0], $versionParts[1], $versionParts[2], $versionParts[3])
-    }
-
-    # Convert dictionary values to an array
-    $valuesArray = $allKeys.Values
-
-    # Sort by Type, then MajorVersion, then MinorVersion
-    $sortedValues = $valuesArray | Sort-Object Type, @{Expression={ConvertTo-Version $_.MajorVersion}}, @{Expression={ConvertTo-Version $_.MinorVersion}}
-
-    # Output to table
-    $sortedValues | Format-Table -AutoSize   
+    
+    Write-AcuSuccess "Retrieved $($allVersions.Count) versions"
+    
+    Write-AcuSection -Title "Version List"
+    
+    # Sort and display
+    $sortedVersions = $allVersions.Values | 
+    Sort-Object Type, 
+    @{Expression = { [Version]($_.MajorVersion -replace '\.', '.0.') } }, 
+    @{Expression = { [Version]$_.MinorVersion } }
+    
+    $sortedVersions | Format-Table -AutoSize
+    
+    Write-AcuInfo "Total versions found: $($allVersions.Count)"
 }
 
 function Get-S3Keys {
     param (
-        [string]$ContinuationToken
+        [string] $ContinuationToken,
+        [switch] $Preview
     )
 
-    # Base URL
-    $baseUrl = "http://Acu-builds.s3.amazonaws.com/?list-type=2"
-
-    # Add continuation token to URL if provided
+    Write-AcuDebug "Querying S3 for version information"
+    
+    $baseUrl = "http://acumatica-builds.s3.amazonaws.com/?list-type=2"
+    
     if ($ContinuationToken) {
         $baseUrl += "&continuation-token=$([System.Web.HttpUtility]::UrlEncode($ContinuationToken))"
+        Write-AcuDebug "Using continuation token"
     }
-    if($preview){
+    
+    if ($Preview) {
         $baseUrl += "&prefix=builds/preview/"
+        Write-AcuDebug "Searching preview builds"
+    }
+    else {
+        Write-AcuDebug "Searching release builds"
     }
 
-    # Send GET request
-    $response = Invoke-WebRequest -Uri $baseUrl
-
-    # Parse XML response
-    [xml]$xml = $response.Content
-
-    # Extract keys and continuation token
-    if ($preview){
-        $match = '(?<prefix>builds/preview/)?(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcuERP/AcuERPInstall.msi'
+    try {
+        $response = Invoke-WebRequest -Uri $baseUrl
+        [xml]$xml = $response.Content
+        
+        Write-AcuDebug "Successfully retrieved S3 listing"
     }
-    else{
-        $match = '(?<prefix>builds/)?(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcuERP/AcuERPInstall.msi'
+    catch {
+        Write-AcuError "Failed to retrieve version listing from S3"
+        throw "Failed to retrieve version listing: $_"
+    }
+
+    $pattern = if ($Preview) {
+        'builds/preview/(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcumaticaERP/AcumaticaERPInstall.msi'
+    }
+    else {
+        'builds/(?<major>\d{2}\.\d)/(?<minor>\d{2}\.\d{3}\.\d{4})/AcumaticaERP/AcumaticaERPInstall.msi'
     }
 
     $keys = $xml.ListBucketResult.Contents.Key | ForEach-Object {
-        if ($_ -match $match) {
+        if ($_ -match $pattern) {
             [PSCustomObject]@{
-                Type = if ($matches['prefix'] -eq 'builds/preview/') { 'builds/preview' } else { 'builds' }
+                Type         = if ($Preview) { 'preview' } else { 'release' }
                 MajorVersion = $matches['major']
                 MinorVersion = $matches['minor']
             }
         }
-     }
-    $nextToken = $xml.ListBucketResult.NextContinuationToken
-
-    return @{ "Keys" = $keys; "NextToken" = $nextToken }
+    }
+    
+    Write-AcuDebug "Parsed $($keys.Count) version entries from current page"
+    
+    @{
+        Keys      = $keys
+        NextToken = $xml.ListBucketResult.NextContinuationToken
+    }
 }
-
 
 function Get-InstalledAcuVersions {
-    $dir = Get-AcuVersionDir;
-    Get-ChildItem -Directory -Path $dir | Format-Table @{L=’Installed Version’;E={$_.Name}} -AutoSize
+    Write-AcuHeader -Title "Installed Acumatica Versions"
+    
+    Write-AcuSection -Title "Scanning Installation Directory"
+    
+    $versionDir = Join-Path (Get-AcuDir) (Get-AcuVersionDir)
+    
+    if (!(Test-Path $versionDir)) {
+        Write-AcuWarning "Version directory not found: $versionDir"
+        Write-AcuInfo "No versions are currently installed"
+        return
+    }
+    
+    Write-AcuDebug "Scanning directory: $versionDir"
+    
+    $installedVersions = Get-ChildItem -Directory -Path $versionDir
+    
+    if ($installedVersions.Count -eq 0) {
+        Write-AcuInfo "No versions are currently installed"
+        return
+    }
+    
+    Write-AcuSuccess "Found $($installedVersions.Count) installed versions"
+    
+    Write-AcuSection -Title "Version Details"
+    
+    $versionDetails = $installedVersions | 
+    Select-Object @{L = 'Installed Version'; E = { $_.Name } }, 
+    @{L = 'Install Date'; E = { $_.CreationTime } },
+    @{L = 'Size (GB)'; E = { [math]::Round((Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB, 2) } }
+    
+    $versionDetails | Format-Table -AutoSize
+    
+    $totalSize = ($versionDetails | Measure-Object -Property "Size (GB)" -Sum).Sum
+    Write-AcuInfo "Total disk space used: $([math]::Round($totalSize, 2)) GB"
 }
 
-function Remove-AcuVersion{
+function Remove-AcuVersion {
     param (
+        [Parameter(Mandatory = $true)]
         [string] $version
     )
+    
+    Write-AcuHeader -Title "Acumatica Version Removal" -Subtitle "Version: $version"
+    
+    Write-AcuSection -Title "Validating Version"
+    
     Test-VersionFormat -version $version
-    $dir = Get-AcuVersionPath($version)
-    Remove-Item -Recurse -Force $dir
+    Write-AcuSuccess "Version format validated: $version"
+    
+    $versionPath = Get-AcuVersionPath -versionNbr $version
+    if (!(Test-Path $versionPath)) {
+        Write-AcuError "Version $version not found at: $versionPath"
+        Write-AcuInfo "Use Get-InstalledAcuVersions to see available versions"
+        return
+    }
+    
+    Write-AcuSuccess "Version found at: $versionPath"
+    
+    # Calculate size before removal
+    $sizeGB = [math]::Round((Get-ChildItem $versionPath -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB, 2)
+    
+    Write-AcuTable -Data @{
+        "Version" = $version
+        "Path"    = $versionPath
+        "Size"    = "$sizeGB GB"
+    } -Title "Version to Remove"
+    
+    Write-AcuSection -Title "Confirmation"
+    
+    if (PromptYesNo "Are you sure you want to remove version $version?") {
+        Write-AcuStep "Removing version files"
+        
+        try {
+            Remove-Item -Recurse -Force $versionPath
+            Write-AcuSuccess "Version files removed successfully"
+            
+            Write-AcuSummary -Operation "Version Removal" -Status "Completed Successfully" -Details @{
+                "Version"     = $version
+                "Space Freed" = "$sizeGB GB"
+            }
+        }
+        catch {
+            Write-AcuError "Failed to remove version files: $_"
+            throw
+        }
+    }
+    else {
+        Write-AcuInfo "Version removal cancelled by user"
+    }
 }
