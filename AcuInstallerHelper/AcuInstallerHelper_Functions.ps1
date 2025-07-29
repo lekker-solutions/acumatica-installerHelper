@@ -274,7 +274,8 @@ function Build-AcuExeArgs {
                 "-ipath:`"$sitePath`"",
                 "-swebsite:`"Default Web Site`"",
                 "-svirtdir:`"$virtDir`"",
-                "-spool:`"DefaultAppPool`""
+                "-spool:`"DefaultAppPool`"",
+                "-dbsrvwinauth:True"
             )
             
             if ($portal) {
