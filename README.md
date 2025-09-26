@@ -230,6 +230,65 @@ When creating sites with newer Acumatica versions (2024 R1+), you may see warnin
 
 These are cosmetic warnings from ac.exe as it scans assemblies and can be safely ignored. Your site will still be created successfully.
 
+## Testing
+
+The AcuInstallerHelper module includes comprehensive Pester tests to ensure reliability and functionality.
+
+### Prerequisites
+
+You need Pester v5.0 or higher to run the tests:
+
+```powershell
+# Check if Pester is installed
+Get-Module -Name Pester -ListAvailable
+
+# Install Pester if needed (requires PowerShell 5.1+ or PowerShell 7+)
+Install-Module -Name Pester -Force -SkipPublisherCheck
+```
+
+### Running Tests
+
+To run the tests, navigate to the AcuInstallerHelper module directory and execute:
+
+```powershell
+# Run all tests
+Invoke-Pester .\AcuInstallerHelper.Tests.ps1
+
+# Run tests with detailed output
+Invoke-Pester .\AcuInstallerHelper.Tests.ps1 -Output Detailed
+
+# Run tests and generate a coverage report
+Invoke-Pester .\AcuInstallerHelper.Tests.ps1 -CodeCoverage *.dll
+```
+
+### Test Coverage
+
+The test suite covers:
+
+- **Module Loading**: Verifies the module imports correctly and all cmdlets are available
+- **Configuration Cmdlets**: Tests all Get/Set configuration functions with parameter validation
+- **Version Management**: Tests version installation, removal, and listing functionality
+- **Site Management**: Tests site creation, removal, updates, and listing
+- **Error Handling**: Validates graceful error handling for various failure scenarios
+- **Integration Tests**: Tests complete configuration workflows
+- **Performance Tests**: Ensures cmdlets respond within reasonable timeframes
+
+### Test Structure
+
+Tests are organized into the following categories:
+
+1. **Module Loading Tests** - Basic module functionality
+2. **Configuration Cmdlets** - Settings and configuration management
+3. **Version Management Cmdlets** - Acumatica version operations
+4. **Site Management Cmdlets** - Site lifecycle operations
+5. **Error Handling** - Exception and error scenarios
+6. **Integration Tests** - End-to-end workflows
+7. **Performance Tests** - Response time validation
+
+### Continuous Integration
+
+The tests are designed to run in CI/CD environments and use mocking where appropriate to avoid making actual system changes during testing.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://www.gnu.org/licenses/gpl-3.0.html#license-text) file for details.

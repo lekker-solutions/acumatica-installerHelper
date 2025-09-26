@@ -9,7 +9,7 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule        = 'AcuInstallerHelper.psm1'
+    RootModule        = 'AcumaticaInstallerHelper.PowerShell.dll'
 
     # Version number of this module.
     ModuleVersion     = '0.7.1'
@@ -69,27 +69,24 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @(
-        'Add-AcuVersion',
-        'Remove-AcuVersion',
-        'Get-AcuVersions',
-        'Get-InstalledAcuVersions',
-        'Add-AcuSite',
-        'Remove-AcuSite',
-        'Update-AcuSite',
-        'Set-AcuDir',
-        'Set-AcuSiteDir',
-        'Set-AcuVersionDir',
-        'Set-InstallDebugTools',
-        'Set-SiteType',
-        'Get-AcuDir',
-        'Get-AcuSiteDir',
-        'Get-AcuVersionDir',
-        'Get-InstallDebugTools',
-        'Get-SiteType')
+    FunctionsToExport = @()
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = @()
+    CmdletsToExport   = @(
+        'Install-AcumaticaVersion',
+        'Uninstall-AcumaticaVersion', 
+        'Get-AcumaticaVersion',
+        'New-AcumaticaSite',
+        'Remove-AcumaticaSite',
+        'Get-AcumaticaSite',
+        'Update-AcumaticaSite',
+        'Get-AcumaticaConfig',
+        'Set-AcumaticaDirectory',
+        'Set-AcumaticaSiteDirectory',
+        'Set-AcumaticaVersionDirectory',
+        'Set-AcumaticaDefaultSiteType',
+        'Set-AcumaticaInstallDebugTools'
+    )
 
     # Variables to export from this module
     VariablesToExport = @()

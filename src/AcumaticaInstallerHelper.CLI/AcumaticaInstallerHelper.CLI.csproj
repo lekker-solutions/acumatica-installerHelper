@@ -19,4 +19,13 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="8.0.0" />
   </ItemGroup>
 
+<Target Name="CopyDllsToModuleDirectory" AfterTargets="Build">
+  <ItemGroup>
+    <DllFiles Include="$(OutputPath)*.dll" />
+    <PdbFiles Include="$(OutputPath)*.pdb" />
+  </ItemGroup>
+  <Copy SourceFiles="@(DllFiles)" DestinationFolder="..\..\AcuInstallerHelper\" />
+  <Copy SourceFiles="@(PdbFiles)" DestinationFolder="..\..\AcuInstallerHelper\" />
+</Target>
+
 </Project>
