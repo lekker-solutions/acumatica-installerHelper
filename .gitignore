@@ -6,3 +6,5 @@ src/*/obj
 tests/*/bin
 tests/*/obj
 .vs/
+AcuInstallerHelper/*.dll
+AcuInstallerHelper/*.pdb
