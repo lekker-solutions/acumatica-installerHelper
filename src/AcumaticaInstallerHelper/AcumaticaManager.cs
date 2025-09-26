@@ -9,17 +9,20 @@ public class AcumaticaManager
     private readonly ISiteService _siteService;
     private readonly IConfigurationService _configService;
     private readonly ILoggingService _loggingService;
+    private readonly IPatchService _patchService;
 
     public AcumaticaManager(
         IVersionService versionService,
         ISiteService siteService,
         IConfigurationService configService,
-        ILoggingService loggingService)
+        ILoggingService loggingService,
+        IPatchService patchService)
     {
         _versionService = versionService;
         _siteService = siteService;
         _configService = configService;
         _loggingService = loggingService;
+        _patchService = patchService;
     }
 
     // Version Management
@@ -146,5 +149,40 @@ public class AcumaticaManager
     public bool RequiresAdministratorPrivileges()
     {
         return _siteService.RequiresAdministratorPrivileges();
+    }
+
+    // Patch Management
+    public async Task<PatchCheckResult> CheckForPatchesAsync(string siteName)
+    {
+        var sitePath = GetSitePath(siteName);
+        return await _patchService.CheckForPatchesAsync(sitePath);
+    }
+
+    public async Task<PatchResult> ApplyPatchAsync(string siteName, string? backupPath = null)
+    {
+        var sitePath = GetSitePath(siteName);
+        return await _patchService.ApplyPatchAsync(sitePath, backupPath);
+    }
+
+    public async Task<PatchResult> ApplyPatchFromArchiveAsync(string siteName, string archivePath, string? backupPath = null)
+    {
+        var sitePath = GetSitePath(siteName);
+        return await _patchService.ApplyPatchFromArchiveAsync(sitePath, archivePath, backupPath);
+    }
+
+    public async Task<PatchResult> RollbackPatchAsync(string siteName, string? backupPath = null)
+    {
+        var sitePath = GetSitePath(siteName);
+        return await _patchService.RollbackPatchAsync(sitePath, backupPath);
+    }
+
+    public async Task<bool> IsPatchToolAvailableAsync()
+    {
+        return await _patchService.IsPatchToolAvailableAsync();
+    }
+
+    private string GetSitePath(string siteName)
+    {
+        return Path.Combine(_configService.GetSiteDirectory(), siteName);
     }
 }

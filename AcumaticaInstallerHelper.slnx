@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/AcumaticaInstallerHelper.CLI/AcumaticaInstallerHelper.CLI.csproj" />
+  <Project Path="src/AcumaticaInstallerHelper/AcumaticaInstallerHelper.csproj" />
+</Solution>
