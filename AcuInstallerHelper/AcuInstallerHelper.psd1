@@ -12,7 +12,7 @@
     RootModule        = 'AcumaticaInstallerHelper.PowerShell.dll'
 
     # Version number of this module.
-    ModuleVersion     = '0.7.1'
+    ModuleVersion     = '1.0'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
@@ -27,10 +27,10 @@
     CompanyName       = 'Lekker Solutions LLC'
 
     # Copyright statement for this module
-    Copyright         = '(c) Kyle Vanderstoep. All rights reserved.'
+    Copyright         = '(c) Lekker Solutions LLC. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'Assists with the installation and removal of Acumatica Sites and Versions'
+    Description       = 'Assists with the installation, removal and patching of Acumatica Sites and Versions'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '5.1'
@@ -122,14 +122,11 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
-Version 0.7.0
-- Added InstallDebugTools configuration option
-- Added SiteType configuration (Dev/Production)
-- Optimized code structure and error handling
-- Improved URL validation and download logic
-- Enhanced configuration management functions
-- Better separation of concerns
-- Sites automatically use dev configuration based on SiteType setting
+            Version 1.0
+            - Converted to Binary Module
+            - Added integration tests
+            - Added Patching Support
+            - Added Support for new ac.exe command arguments in 25R2
 '@
 
             # Prerelease string of this module
