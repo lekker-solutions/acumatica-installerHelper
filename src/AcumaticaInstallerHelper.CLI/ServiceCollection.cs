@@ -42,7 +42,7 @@ namespace AcumaticaInstallerHelper.CLI
 
             var versionService = new VersionService(configService, loggingService, httpClient);
             var siteService = new SiteService(versionService, configService, loggingService);
-            var patchService = new PatchService(configService, loggingService, httpClient);
+            var patchService = new PatchService(versionService, loggingService);
 
             return new AcumaticaManager(
                 versionService,

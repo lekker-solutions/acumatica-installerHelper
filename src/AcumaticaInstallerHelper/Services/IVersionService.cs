@@ -11,6 +11,7 @@ public interface IVersionService
     bool IsVersionInstalled(string version);
     string GetVersionPath(string version);
     string GetAcuExePath(string version);
+    string GetPatchUtilityPath(string version);
     void ValidateVersionFormat(string version);
 }
 

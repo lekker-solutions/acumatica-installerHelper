@@ -134,25 +134,29 @@ namespace AcumaticaInstallerHelper.CLI
     [OutputType(typeof(bool))]
     public class TestAcumaticaPatchToolCmdlet : AcumaticaBaseCmdlet
     {
+        [Parameter(Mandatory = true, Position = 0, HelpMessage = "Acumatica version to check patch tool for")]
+        [ValidateNotNullOrEmpty]
+        public string Version { get; set; } = string.Empty;
+
         protected override async Task ProcessRecordAsync()
         {
             try
             {
-                var isAvailable = await AcumaticaManager.IsPatchToolAvailableAsync();
+                var isAvailable = await AcumaticaManager.IsPatchToolAvailableAsync(Version);
                 WriteObject(isAvailable);
 
                 if (isAvailable)
                 {
-                    WriteInformation("PatchTool is available and ready to use", new string[] { "Available" });
+                    WriteInformation($"PatchTool is available for version {Version}", new string[] { "Available" });
                 }
                 else
                 {
-                    WriteWarning("PatchTool is not available. It will be downloaded automatically when needed.");
+                    WriteWarning($"PatchTool is not available for version {Version}. Ensure the version is installed.");
                 }
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "TestPatchToolException", ErrorCategory.NotSpecified, null));
+                WriteError(new ErrorRecord(ex, "TestPatchToolException", ErrorCategory.NotSpecified, Version));
             }
         }
     }

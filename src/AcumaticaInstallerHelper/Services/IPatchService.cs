@@ -2,12 +2,12 @@ namespace AcumaticaInstallerHelper.Services;
 
 public interface IPatchService
 {
-    Task<string> GetPatchToolPathAsync();
-    Task<bool> IsPatchToolAvailableAsync();
-    Task<PatchCheckResult> CheckForPatchesAsync(string sitePath);
-    Task<PatchResult> ApplyPatchAsync(string sitePath, string? backupPath = null);
-    Task<PatchResult> ApplyPatchFromArchiveAsync(string sitePath, string archivePath, string? backupPath = null);
-    Task<PatchResult> RollbackPatchAsync(string sitePath, string? backupPath = null);
+    Task<string> GetPatchToolPathAsync(string version);
+    Task<bool> IsPatchToolAvailableAsync(string version);
+    Task<PatchCheckResult> CheckForPatchesAsync(string sitePath, string version);
+    Task<PatchResult> ApplyPatchAsync(string sitePath, string version, string? backupPath = null);
+    Task<PatchResult> ApplyPatchFromArchiveAsync(string sitePath, string archivePath, string version, string? backupPath = null);
+    Task<PatchResult> RollbackPatchAsync(string sitePath, string version, string? backupPath = null);
 }
 
 public class PatchCheckResult

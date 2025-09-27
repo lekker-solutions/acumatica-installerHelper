@@ -248,46 +248,74 @@ Install-Module -Name Pester -Force -SkipPublisherCheck
 
 ### Running Tests
 
-To run the tests, navigate to the AcuInstallerHelper module directory and execute:
+To run the tests, navigate to the repository root directory and execute:
 
 ```powershell
 # Run all tests
-Invoke-Pester .\AcuInstallerHelper.Tests.ps1
+Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1
 
 # Run tests with detailed output
-Invoke-Pester .\AcuInstallerHelper.Tests.ps1 -Output Detailed
+Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -Output Detailed
 
-# Run tests and generate a coverage report
-Invoke-Pester .\AcuInstallerHelper.Tests.ps1 -CodeCoverage *.dll
+# Run tests with code coverage (if applicable)
+Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -CodeCoverage .\AcuInstallerHelper\*.dll
+
+# Run tests and show results in CI format
+Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -CI
+```
+
+### Alternative: Run from tests directory
+
+You can also run the tests from within the tests directory:
+
+```powershell
+# Navigate to tests directory
+cd tests
+
+# Run tests
+Invoke-Pester .\AcuInstallerHelper.Tests.ps1 -Output Detailed
 ```
 
 ### Test Coverage
 
-The test suite covers:
+The comprehensive test suite covers:
 
-- **Module Loading**: Verifies the module imports correctly and all cmdlets are available
-- **Configuration Cmdlets**: Tests all Get/Set configuration functions with parameter validation
-- **Version Management**: Tests version installation, removal, and listing functionality
-- **Site Management**: Tests site creation, removal, updates, and listing
-- **Error Handling**: Validates graceful error handling for various failure scenarios
-- **Integration Tests**: Tests complete configuration workflows
-- **Performance Tests**: Ensures cmdlets respond within reasonable timeframes
+- **Module Loading and Basic Functionality**: Verifies module import and cmdlet availability
+- **Configuration Management**: Tests all configuration cmdlets with parameter validation
+- **Version Management**: Tests version installation, removal, and listing operations
+- **Site Management**: Tests site creation, removal, updates, and listing operations
+- **Patch Management**: Tests patch-related cmdlets and version support logic
+- **Error Handling and Edge Cases**: Validates graceful error handling for various failure scenarios
+- **Performance and Response Time**: Ensures cmdlets respond within acceptable timeframes
+- **Build and Deployment Verification**: Confirms all required artifacts are present
+- **Integration Tests**: End-to-end functionality validation
 
-### Test Structure
+### Test Organization
 
-Tests are organized into the following categories:
+The test file is organized into logical sections:
 
-1. **Module Loading Tests** - Basic module functionality
-2. **Configuration Cmdlets** - Settings and configuration management
-3. **Version Management Cmdlets** - Acumatica version operations
-4. **Site Management Cmdlets** - Site lifecycle operations
-5. **Error Handling** - Exception and error scenarios
-6. **Integration Tests** - End-to-end workflows
-7. **Performance Tests** - Response time validation
+1. **Module Loading and Basic Functionality** - Core module operations
+2. **Configuration Management** - Settings and configuration validation
+3. **Version Management** - Version lifecycle operations
+4. **Site Management** - Site lifecycle operations  
+5. **Patch Management** - Patch functionality and version support
+6. **Error Handling and Edge Cases** - Robustness validation
+7. **Performance and Response Time** - Performance characteristics
+8. **Build and Deployment Verification** - Artifact validation
+9. **Integration Test Summary** - Overall system health check
+
+### Test Features
+
+- **Comprehensive Parameter Validation**: All cmdlets tested with various parameter combinations
+- **Version Support Logic Testing**: Validates patch version restrictions (25R1+ requirement)
+- **Mocking**: Uses PowerShell mocking to avoid making actual system changes during testing
+- **Performance Monitoring**: Tracks cmdlet response times to ensure good performance
+- **CI/CD Ready**: Designed to run in automated environments without dependencies
+- **Clear Test Output**: Provides colored success indicators and detailed failure information
 
 ### Continuous Integration
 
-The tests are designed to run in CI/CD environments and use mocking where appropriate to avoid making actual system changes during testing.
+The tests are designed to run in CI/CD pipelines and use appropriate mocking to avoid making actual system changes during testing. Use the `-CI` parameter for automated environments.
 
 ## License
 

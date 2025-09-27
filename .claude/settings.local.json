@@ -6,7 +6,11 @@
       "Bash(dotnet test)",
       "Bash(dotnet run:*)",
       "Bash(dotnet build:*)",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "Bash(pwsh:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

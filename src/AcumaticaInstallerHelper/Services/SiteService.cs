@@ -271,7 +271,30 @@ public class SiteService : ISiteService
             }
         };
 
+        var outputBuffer = new List<string>();
+        var errorBuffer = new List<string>();
+        
+        process.OutputDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                outputBuffer.Add(e.Data);
+                _loggingService.WriteInfo($"ac.exe: {e.Data}");
+            }
+        };
+        
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                errorBuffer.Add(e.Data);
+                _loggingService.WriteWarning($"ac.exe: {e.Data}");
+            }
+        };
+
         process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
         await process.WaitForExitAsync();
 
         if (process.ExitCode == 0)
@@ -282,6 +305,14 @@ public class SiteService : ISiteService
         else
         {
             _loggingService.WriteError($"Site creation failed with exit code: {process.ExitCode}");
+            if (errorBuffer.Count > 0)
+            {
+                _loggingService.WriteError("Error details:");
+                foreach (var error in errorBuffer)
+                {
+                    _loggingService.WriteError($"  {error}");
+                }
+            }
             return false;
         }
     }
@@ -289,7 +320,11 @@ public class SiteService : ISiteService
     private async Task<bool> ExecuteAcuExeRemovalAsync(string siteName, string version)
     {
         var acExePath = _versionService.GetAcuExePath(version);
-        var arguments = new[] { "-d", siteName };
+        
+        // Use correct argument format based on version
+        var arguments = IsVersion25R2OrGreater(version) 
+            ? new[] { "--configmode", "DeleteSite", "--iname", $"\"{siteName}\"" }
+            : new[] { "-d", siteName };
         
         _loggingService.WriteProgress("Executing site removal...");
         _loggingService.WriteDebug($"ac.exe path: {acExePath}");
@@ -308,8 +343,48 @@ public class SiteService : ISiteService
             }
         };
 
+        var outputBuffer = new List<string>();
+        var errorBuffer = new List<string>();
+        
+        process.OutputDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                outputBuffer.Add(e.Data);
+                _loggingService.WriteInfo($"ac.exe: {e.Data}");
+            }
+        };
+        
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                errorBuffer.Add(e.Data);
+                _loggingService.WriteWarning($"ac.exe: {e.Data}");
+            }
+        };
+
         process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
         await process.WaitForExitAsync();
+
+        if (process.ExitCode == 0)
+        {
+            _loggingService.WriteSuccess("Site removal completed successfully");
+        }
+        else
+        {
+            _loggingService.WriteError($"Site removal failed with exit code: {process.ExitCode}");
+            if (errorBuffer.Count > 0)
+            {
+                _loggingService.WriteError("Error details:");
+                foreach (var error in errorBuffer)
+                {
+                    _loggingService.WriteError($"  {error}");
+                }
+            }
+        }
 
         return process.ExitCode == 0;
     }
@@ -318,29 +393,75 @@ public class SiteService : ISiteService
     {
         var args = new List<string>();
         
-        if (isNewInstance)
-        {
-            args.Add("-ni");
-        }
+        // Determine if this is version 25R2 or greater (new argument format)
+        var isNewFormat = IsVersion25R2OrGreater(siteConfig.Version);
         
-        args.AddRange(new[] { "-sn", $"\"{siteConfig.SiteName}\"" });
-        args.AddRange(new[] { "-sp", $"\"{siteConfig.InstallPath}\"" });
-        args.AddRange(new[] { "-ds", "(local)" });
-        args.AddRange(new[] { "-dn", siteConfig.SiteName });
-        args.AddRange(new[] { "-ws", "\"Default Web Site\"" });
-        
-        if (options.Portal)
+        if (isNewFormat)
         {
-            args.AddRange(new[] { "-vd", $"\"{siteConfig.SiteName}Portal\"" });
+            // New format for 25R2+
+            if (isNewInstance)
+            {
+                args.AddRange(new[] { "--configmode", "NewInstance" });
+            }
+            
+            args.AddRange(new[] { "--iname", $"\"{siteConfig.SiteName}\"" });
+            args.AddRange(new[] { "--ipath", $"\"{siteConfig.InstallPath}\"" });
+            args.AddRange(new[] { "--dbsrvname", "(local)" });
+            args.AddRange(new[] { "--dbname", siteConfig.SiteName });
+            args.Add("--dbsrvwinauth");
+            args.Add("--dbnew");
+            args.AddRange(new[] { "--swebsite", "\"Default Web Site\"" });
+            
+            if (options.Portal)
+            {
+                args.AddRange(new[] { "--svirtdir", $"\"{siteConfig.SiteName}Portal\"" });
+            }
+            else
+            {
+                args.AddRange(new[] { "--svirtdir", $"\"{siteConfig.SiteName}\"" });
+            }
+            
+            args.AddRange(new[] { "--spool", "\"DefaultAppPool\"" });
         }
         else
         {
-            args.AddRange(new[] { "-vd", $"\"{siteConfig.SiteName}\"" });
+            // Old format for 25R1 and earlier
+            if (isNewInstance)
+            {
+                args.Add("-ni");
+            }
+            
+            args.AddRange(new[] { "-sn", $"\"{siteConfig.SiteName}\"" });
+            args.AddRange(new[] { "-sp", $"\"{siteConfig.InstallPath}\"" });
+            args.AddRange(new[] { "-ds", "(local)" });
+            args.AddRange(new[] { "-dn", siteConfig.SiteName });
+            args.AddRange(new[] { "-ws", "\"Default Web Site\"" });
+            
+            if (options.Portal)
+            {
+                args.AddRange(new[] { "-vd", $"\"{siteConfig.SiteName}Portal\"" });
+            }
+            else
+            {
+                args.AddRange(new[] { "-vd", $"\"{siteConfig.SiteName}\"" });
+            }
+            
+            args.AddRange(new[] { "-ap", "\"DefaultAppPool\"" });
         }
         
-        args.AddRange(new[] { "-ap", "\"DefaultAppPool\"" });
-        
         return args;
+    }
+    
+    private static bool IsVersion25R2OrGreater(string version)
+    {
+        // Parse version like "25.200.0248" or "24.200.0123"
+        var parts = version.Split('.');
+        if (parts.Length >= 2 && int.TryParse(parts[0], out var major) && int.TryParse(parts[1], out var minor))
+        {
+            // 25R2 = 25.200, 25R1 = 25.100, 24R2 = 24.200, etc.
+            return major > 25 || (major == 25 && minor >= 200);
+        }
+        return false;
     }
 
     private void ApplyDevelopmentConfiguration(string sitePath)

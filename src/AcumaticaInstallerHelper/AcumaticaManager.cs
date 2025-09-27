@@ -155,30 +155,50 @@ public class AcumaticaManager
     public async Task<PatchCheckResult> CheckForPatchesAsync(string siteName)
     {
         var sitePath = GetSitePath(siteName);
-        return await _patchService.CheckForPatchesAsync(sitePath);
+        var version = GetSiteVersion(siteName);
+        if (string.IsNullOrEmpty(version))
+        {
+            throw new InvalidOperationException($"Could not determine version for site: {siteName}");
+        }
+        return await _patchService.CheckForPatchesAsync(sitePath, version);
     }
 
     public async Task<PatchResult> ApplyPatchAsync(string siteName, string? backupPath = null)
     {
         var sitePath = GetSitePath(siteName);
-        return await _patchService.ApplyPatchAsync(sitePath, backupPath);
+        var version = GetSiteVersion(siteName);
+        if (string.IsNullOrEmpty(version))
+        {
+            throw new InvalidOperationException($"Could not determine version for site: {siteName}");
+        }
+        return await _patchService.ApplyPatchAsync(sitePath, version, backupPath);
     }
 
     public async Task<PatchResult> ApplyPatchFromArchiveAsync(string siteName, string archivePath, string? backupPath = null)
     {
         var sitePath = GetSitePath(siteName);
-        return await _patchService.ApplyPatchFromArchiveAsync(sitePath, archivePath, backupPath);
+        var version = GetSiteVersion(siteName);
+        if (string.IsNullOrEmpty(version))
+        {
+            throw new InvalidOperationException($"Could not determine version for site: {siteName}");
+        }
+        return await _patchService.ApplyPatchFromArchiveAsync(sitePath, archivePath, version, backupPath);
     }
 
     public async Task<PatchResult> RollbackPatchAsync(string siteName, string? backupPath = null)
     {
         var sitePath = GetSitePath(siteName);
-        return await _patchService.RollbackPatchAsync(sitePath, backupPath);
+        var version = GetSiteVersion(siteName);
+        if (string.IsNullOrEmpty(version))
+        {
+            throw new InvalidOperationException($"Could not determine version for site: {siteName}");
+        }
+        return await _patchService.RollbackPatchAsync(sitePath, version, backupPath);
     }
 
-    public async Task<bool> IsPatchToolAvailableAsync()
+    public async Task<bool> IsPatchToolAvailableAsync(string version)
     {
-        return await _patchService.IsPatchToolAvailableAsync();
+        return await _patchService.IsPatchToolAvailableAsync(version);
     }
 
     private string GetSitePath(string siteName)

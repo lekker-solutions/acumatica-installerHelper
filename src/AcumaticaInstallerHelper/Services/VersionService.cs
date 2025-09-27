@@ -56,6 +56,11 @@ public class VersionService : IVersionService
         return Path.Combine(GetVersionPath(version), "Data", "ac.exe");
     }
 
+    public string GetPatchUtilityPath(string version)
+    {
+        return Path.Combine(GetVersionPath(version), "Data", "PatchUtility", "PatchTool.exe");
+    }
+
     public List<AcumaticaVersion> GetInstalledVersions()
     {
         var versionsPath = Path.Combine(_configService.GetAcumaticaDirectory(), _configService.GetVersionDirectory());
