@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 
 namespace AcumaticaInstallerHelper.Services;
 
@@ -9,7 +8,6 @@ public class PatchService : IPatchService
 {
     private readonly IConfigurationService _configService;
     private readonly ILoggingService _loggingService;
-    private readonly ILogger<PatchService> _logger;
     private readonly HttpClient _httpClient;
     
     private static readonly string PatchToolUrl = "https://update.acumatica.com/rest/api/patch/tool";
@@ -19,12 +17,10 @@ public class PatchService : IPatchService
     public PatchService(
         IConfigurationService configService,
         ILoggingService loggingService,
-        ILogger<PatchService> logger,
         HttpClient httpClient)
     {
         _configService = configService;
         _loggingService = loggingService;
-        _logger = logger;
         _httpClient = httpClient;
     }
 
@@ -35,7 +31,7 @@ public class PatchService : IPatchService
 
         if (!File.Exists(patchToolPath))
         {
-            _logger.LogDebug("PatchTool not found at {Path}, downloading...", patchToolPath);
+            _loggingService.WriteDebug($"PatchTool not found at {patchToolPath}, downloading...");
             await DownloadAndExtractPatchToolAsync(toolsPath);
         }
 
@@ -51,14 +47,14 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to check patch tool availability");
+            _loggingService.WriteError($"Failed to check patch tool availability: {ex.Message}");
             return false;
         }
     }
 
     public async Task<PatchCheckResult> CheckForPatchesAsync(string sitePath)
     {
-        _logger.LogDebug("Checking for patches at site path: {SitePath}", sitePath);
+        _loggingService.WriteDebug($"Checking for patches at site path: {sitePath}");
 
         try
         {
@@ -87,7 +83,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to check for patches at {SitePath}", sitePath);
+            _loggingService.WriteError($"Failed to check for patches at {sitePath}: {ex.Message}");
             return new PatchCheckResult
             {
                 HasPatch = false,
@@ -98,7 +94,7 @@ public class PatchService : IPatchService
 
     public async Task<PatchResult> ApplyPatchAsync(string sitePath, string? backupPath = null)
     {
-        _logger.LogDebug("Applying patch at site path: {SitePath}", sitePath);
+        _loggingService.WriteDebug($"Applying patch at site path: {sitePath}");
 
         try
         {
@@ -141,7 +137,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to apply patch at {SitePath}", sitePath);
+            _loggingService.WriteError($"Failed to apply patch at {sitePath}: {ex.Message}");
             return new PatchResult
             {
                 Success = false,
@@ -152,7 +148,7 @@ public class PatchService : IPatchService
 
     public async Task<PatchResult> ApplyPatchFromArchiveAsync(string sitePath, string archivePath, string? backupPath = null)
     {
-        _logger.LogDebug("Applying patch from archive {ArchivePath} at site path: {SitePath}", archivePath, sitePath);
+        _loggingService.WriteDebug($"Applying patch from archive {archivePath} at site path: {sitePath}");
 
         try
         {
@@ -186,7 +182,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to apply patch from archive {ArchivePath} at {SitePath}", archivePath, sitePath);
+            _loggingService.WriteError($"Failed to apply patch from archive {archivePath} at {sitePath}: {ex.Message}");
             return new PatchResult
             {
                 Success = false,
@@ -197,7 +193,7 @@ public class PatchService : IPatchService
 
     public async Task<PatchResult> RollbackPatchAsync(string sitePath, string? backupPath = null)
     {
-        _logger.LogDebug("Rolling back patch at site path: {SitePath}", sitePath);
+        _loggingService.WriteDebug($"Rolling back patch at site path: {sitePath}");
 
         try
         {
@@ -237,7 +233,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to rollback patch at {SitePath}", sitePath);
+            _loggingService.WriteError($"Failed to rollback patch at {sitePath}: {ex.Message}");
             return new PatchResult
             {
                 Success = false,
@@ -272,14 +268,14 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to download and extract PatchTool");
+            _loggingService.WriteError($"Failed to download and extract PatchTool: {ex.Message}");
             throw;
         }
     }
 
     private async Task<string> ExecutePatchToolAsync(string patchToolPath, string arguments)
     {
-        _logger.LogDebug("Executing PatchTool with arguments: {Arguments}", arguments);
+        _loggingService.WriteDebug($"Executing PatchTool with arguments: {arguments}");
 
         using var process = new Process
         {

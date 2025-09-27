@@ -1,14 +1,9 @@
-using Microsoft.Extensions.Logging;
-
 namespace AcumaticaInstallerHelper.Services;
 
 public class ConsoleLoggingService : ILoggingService
 {
-    private readonly ILogger<ConsoleLoggingService> _logger;
-
-    public ConsoleLoggingService(ILogger<ConsoleLoggingService> logger)
+    public ConsoleLoggingService()
     {
-        _logger = logger;
     }
 
     public void WriteLog(LogLevel level, string message)
@@ -19,10 +14,6 @@ public class ConsoleLoggingService : ILoggingService
         Console.Write($"{icon} ");
         Console.ResetColor();
         Console.WriteLine(message);
-
-        // Also log to Microsoft.Extensions.Logging
-        var msLogLevel = ConvertLogLevel(level);
-        _logger.Log(msLogLevel, "{Message}", message);
     }
 
     public void WriteHeader(string title, string? subtitle = null)
@@ -149,18 +140,4 @@ public class ConsoleLoggingService : ILoggingService
         };
     }
 
-    private static Microsoft.Extensions.Logging.LogLevel ConvertLogLevel(LogLevel level)
-    {
-        return level switch
-        {
-            LogLevel.Debug => Microsoft.Extensions.Logging.LogLevel.Debug,
-            LogLevel.Info => Microsoft.Extensions.Logging.LogLevel.Information,
-            LogLevel.Success => Microsoft.Extensions.Logging.LogLevel.Information,
-            LogLevel.Warning => Microsoft.Extensions.Logging.LogLevel.Warning,
-            LogLevel.Error => Microsoft.Extensions.Logging.LogLevel.Error,
-            LogLevel.Progress => Microsoft.Extensions.Logging.LogLevel.Information,
-            LogLevel.Prompt => Microsoft.Extensions.Logging.LogLevel.Information,
-            _ => Microsoft.Extensions.Logging.LogLevel.Information
-        };
-    }
 }

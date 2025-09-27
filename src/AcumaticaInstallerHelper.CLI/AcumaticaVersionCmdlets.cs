@@ -1,118 +1,116 @@
 using System.Management.Automation;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using AcumaticaInstallerHelper;
 using AcumaticaInstallerHelper.Models;
 
-namespace AcumaticaInstallerHelper.PowerShell.Cmdlets;
-
-[Cmdlet(VerbsLifecycle.Install, "AcumaticaVersion")]
-[OutputType(typeof(bool))]
-public class InstallAcumaticaVersionCmdlet : AcumaticaBaseCmdlet
+namespace AcumaticaInstallerHelper.CLI
 {
-    [Parameter(Mandatory = true, Position = 0, HelpMessage = "Version to install (format: ##.###.####)")]
-    [ValidateNotNullOrEmpty]
-    public string Version { get; set; } = string.Empty;
-
-    [Parameter(HelpMessage = "Install preview version")]
-    public SwitchParameter Preview { get; set; }
-
-    [Parameter(HelpMessage = "Install debugger tools")]
-    public SwitchParameter DebugTools { get; set; }
-
-    protected override async Task ProcessRecordAsync()
+    [Cmdlet(VerbsLifecycle.Install, "AcumaticaVersion")]
+    [OutputType(typeof(bool))]
+    public class InstallAcumaticaVersionCmdlet : AcumaticaBaseCmdlet
     {
-        try
+        [Parameter(Mandatory = true, Position = 0, HelpMessage = "Version to install (format: ##.###.####)")]
+        [ValidateNotNullOrEmpty]
+        public string Version { get; set; } = string.Empty;
+
+        [Parameter(HelpMessage = "Install preview version")]
+        public SwitchParameter Preview { get; set; }
+
+        [Parameter(HelpMessage = "Install debugger tools")]
+        public SwitchParameter DebugTools { get; set; }
+
+        protected override async Task ProcessRecordAsync()
         {
-            var success = await AcumaticaManager.InstallVersionAsync(Version, Preview.IsPresent, DebugTools.IsPresent);
-            WriteObject(success);
+            try
+            {
+                var success = await AcumaticaManager.InstallVersionAsync(Version, Preview.IsPresent, DebugTools.IsPresent);
+                WriteObject(success);
             
-            if (success)
-            {
-                WriteInformation($"Successfully installed Acumatica version {Version}", new string[] { "Success" });
+                if (success)
+                {
+                    WriteInformation($"Successfully installed Acumatica version {Version}", new string[] { "Success" });
+                }
+                else
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException($"Failed to install version {Version}"),
+                        "InstallVersionFailed",
+                        ErrorCategory.OperationStopped,
+                        Version));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException($"Failed to install version {Version}"),
-                    "InstallVersionFailed",
-                    ErrorCategory.OperationStopped,
-                    Version));
+                WriteError(new ErrorRecord(ex, "InstallVersionException", ErrorCategory.NotSpecified, Version));
             }
-        }
-        catch (Exception ex)
-        {
-            WriteError(new ErrorRecord(ex, "InstallVersionException", ErrorCategory.NotSpecified, Version));
         }
     }
-}
 
-[Cmdlet(VerbsLifecycle.Uninstall, "AcumaticaVersion")]
-[OutputType(typeof(bool))]
-public class UninstallAcumaticaVersionCmdlet : AcumaticaBaseCmdlet
-{
-    [Parameter(Mandatory = true, Position = 0, HelpMessage = "Version to remove")]
-    [ValidateNotNullOrEmpty]
-    public string Version { get; set; } = string.Empty;
-
-    protected override async Task ProcessRecordAsync()
+    [Cmdlet(VerbsLifecycle.Uninstall, "AcumaticaVersion")]
+    [OutputType(typeof(bool))]
+    public class UninstallAcumaticaVersionCmdlet : AcumaticaBaseCmdlet
     {
-        try
+        [Parameter(Mandatory = true, Position = 0, HelpMessage = "Version to remove")]
+        [ValidateNotNullOrEmpty]
+        public string Version { get; set; } = string.Empty;
+
+        protected override async Task ProcessRecordAsync()
         {
-            var success = await AcumaticaManager.RemoveVersionAsync(Version);
-            WriteObject(success);
+            try
+            {
+                var success = await AcumaticaManager.RemoveVersionAsync(Version);
+                WriteObject(success);
             
-            if (success)
-            {
-                WriteInformation($"Successfully removed Acumatica version {Version}", new string[] { "Success" });
+                if (success)
+                {
+                    WriteInformation($"Successfully removed Acumatica version {Version}", new string[] { "Success" });
+                }
+                else
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException($"Failed to remove version {Version}"),
+                        "RemoveVersionFailed",
+                        ErrorCategory.OperationStopped,
+                        Version));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                WriteError(new ErrorRecord(
-                    new InvalidOperationException($"Failed to remove version {Version}"),
-                    "RemoveVersionFailed",
-                    ErrorCategory.OperationStopped,
-                    Version));
+                WriteError(new ErrorRecord(ex, "RemoveVersionException", ErrorCategory.NotSpecified, Version));
             }
-        }
-        catch (Exception ex)
-        {
-            WriteError(new ErrorRecord(ex, "RemoveVersionException", ErrorCategory.NotSpecified, Version));
         }
     }
-}
 
-[Cmdlet(VerbsCommon.Get, "AcumaticaVersion")]
-[OutputType(typeof(AcumaticaVersion[]))]
-public class GetAcumaticaVersionCmdlet : AcumaticaBaseCmdlet
-{
-    [Parameter(HelpMessage = "Show available versions instead of installed")]
-    public SwitchParameter Available { get; set; }
-
-    [Parameter(HelpMessage = "Major release to filter (e.g., '2023.2')")]
-    public string? MajorRelease { get; set; }
-
-    [Parameter(HelpMessage = "Include preview versions")]
-    public SwitchParameter Preview { get; set; }
-
-    protected override async Task ProcessRecordAsync()
+    [Cmdlet(VerbsCommon.Get, "AcumaticaVersion")]
+    [OutputType(typeof(AcumaticaVersion[]))]
+    public class GetAcumaticaVersionCmdlet : AcumaticaBaseCmdlet
     {
-        try
+        [Parameter(HelpMessage = "Show available versions instead of installed")]
+        public SwitchParameter Available { get; set; }
+
+        [Parameter(HelpMessage = "Major release to filter (e.g., '2023.2')")]
+        public string? MajorRelease { get; set; }
+
+        [Parameter(HelpMessage = "Include preview versions")]
+        public SwitchParameter Preview { get; set; }
+
+        protected override async Task ProcessRecordAsync()
         {
-            if (Available.IsPresent)
+            try
             {
-                var availableVersions = await AcumaticaManager.GetAvailableVersionsAsync(MajorRelease, Preview.IsPresent);
-                WriteObject(availableVersions, true);
+                if (Available.IsPresent)
+                {
+                    var availableVersions = await AcumaticaManager.GetAvailableVersionsAsync(MajorRelease, Preview.IsPresent);
+                    WriteObject(availableVersions, true);
+                }
+                else
+                {
+                    var installedVersions = AcumaticaManager.GetInstalledVersions();
+                    WriteObject(installedVersions, true);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var installedVersions = AcumaticaManager.GetInstalledVersions();
-                WriteObject(installedVersions, true);
+                WriteError(new ErrorRecord(ex, "GetVersionException", ErrorCategory.NotSpecified, null));
             }
-        }
-        catch (Exception ex)
-        {
-            WriteError(new ErrorRecord(ex, "GetVersionException", ErrorCategory.NotSpecified, null));
         }
     }
 }

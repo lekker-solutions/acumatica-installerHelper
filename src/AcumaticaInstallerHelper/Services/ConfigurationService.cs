@@ -1,18 +1,15 @@
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using AcumaticaInstallerHelper.Models;
 
 namespace AcumaticaInstallerHelper.Services;
 
 public class ConfigurationService : IConfigurationService
 {
-    private readonly ILogger<ConfigurationService> _logger;
     private readonly string _configFilePath;
     private AcumaticaConfig? _cachedConfig;
 
-    public ConfigurationService(ILogger<ConfigurationService> logger)
+    public ConfigurationService()
     {
-        _logger = logger;
         var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
         var assemblyDirectory = Path.GetDirectoryName(assemblyLocation) ?? Environment.CurrentDirectory;
         _configFilePath = Path.Combine(assemblyDirectory, "AcuInstallerHelper_config.json");
@@ -29,20 +26,17 @@ public class ConfigurationService : IConfigurationService
             {
                 var jsonContent = File.ReadAllText(_configFilePath);
                 _cachedConfig = JsonSerializer.Deserialize<AcumaticaConfig>(jsonContent) ?? new AcumaticaConfig();
-                _logger.LogDebug("Configuration loaded from {ConfigFile}", _configFilePath);
             }
             else
             {
                 _cachedConfig = new AcumaticaConfig();
-                _logger.LogInformation("Configuration file not found, using defaults");
                 
                 // Save default configuration
                 _ = Task.Run(async () => await SaveConfigurationAsync(_cachedConfig));
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Failed to load configuration, using defaults");
             _cachedConfig = new AcumaticaConfig();
         }
 
@@ -62,11 +56,9 @@ public class ConfigurationService : IConfigurationService
             await File.WriteAllTextAsync(_configFilePath, jsonContent);
             
             _cachedConfig = config;
-            _logger.LogDebug("Configuration saved to {ConfigFile}", _configFilePath);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _logger.LogError(ex, "Failed to save configuration to {ConfigFile}", _configFilePath);
             throw;
         }
     }

@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using AcumaticaInstallerHelper.Models;
 
 namespace AcumaticaInstallerHelper.Services;
@@ -9,7 +8,6 @@ public class VersionService : IVersionService
 {
     private readonly IConfigurationService _configService;
     private readonly ILoggingService _loggingService;
-    private readonly ILogger<VersionService> _logger;
     private readonly HttpClient _httpClient;
     
     private static readonly Regex VersionRegex = new(@"^\d{2}\.\d{3}\.\d{4}$", RegexOptions.Compiled);
@@ -17,26 +15,24 @@ public class VersionService : IVersionService
     public VersionService(
         IConfigurationService configService,
         ILoggingService loggingService,
-        ILogger<VersionService> logger,
         HttpClient httpClient)
     {
         _configService = configService;
         _loggingService = loggingService;
-        _logger = logger;
         _httpClient = httpClient;
     }
 
     public void ValidateVersionFormat(string version)
     {
-        _logger.LogDebug("Validating version format: {Version}", version);
+        _loggingService.WriteDebug($"Validating version format: {version}");
         
         if (!VersionRegex.IsMatch(version))
         {
-            _logger.LogError("Invalid version format: {Version}", version);
+            _loggingService.WriteError($"Invalid version format: {version}");
             throw new VersionFormatException(version);
         }
         
-        _logger.LogDebug("Version format is valid");
+        _loggingService.WriteDebug("Version format is valid");
     }
 
     public bool IsVersionInstalled(string version)
@@ -66,7 +62,7 @@ public class VersionService : IVersionService
         
         if (!Directory.Exists(versionsPath))
         {
-            _logger.LogDebug("Versions directory does not exist: {Path}", versionsPath);
+            _loggingService.WriteDebug($"Versions directory does not exist: {versionsPath}");
             return new List<AcumaticaVersion>();
         }
 
@@ -125,7 +121,7 @@ public class VersionService : IVersionService
             if (File.Exists(tempFile))
             {
                 File.Delete(tempFile);
-                _logger.LogDebug("Temporary file deleted: {TempFile}", tempFile);
+                _loggingService.WriteDebug($"Temporary file deleted: {tempFile}");
             }
 
             if (success)
@@ -144,7 +140,7 @@ public class VersionService : IVersionService
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to install version {version}: {ex.Message}");
-            _logger.LogError(ex, "Failed to install version {Version}", version);
+            _loggingService.WriteError($"Failed to install version {version}: {ex.Message}");
             return false;
         }
     }
@@ -188,7 +184,7 @@ public class VersionService : IVersionService
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to remove version {version}: {ex.Message}");
-            _logger.LogError(ex, "Failed to remove version {Version}", version);
+            _loggingService.WriteError($"Failed to remove version {version}: {ex.Message}");
             return false;
         }
     }
@@ -235,7 +231,7 @@ public class VersionService : IVersionService
         var arguments = $"/i \"{msiPath}\" /quiet INSTALLLOCATION=\"{installPath}\"";
         
         _loggingService.WriteProgress("Running MSI installer...");
-        _logger.LogDebug("MSI install arguments: {Arguments}", arguments);
+        _loggingService.WriteDebug($"MSI install arguments: {arguments}");
 
         using var process = new Process
         {

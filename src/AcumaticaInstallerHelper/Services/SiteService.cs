@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Security.Principal;
 using System.Xml.Linq;
 using Microsoft.Win32;
-using Microsoft.Extensions.Logging;
 using AcumaticaInstallerHelper.Models;
 
 namespace AcumaticaInstallerHelper.Services;
@@ -12,18 +11,15 @@ public class SiteService : ISiteService
     private readonly IVersionService _versionService;
     private readonly IConfigurationService _configService;
     private readonly ILoggingService _loggingService;
-    private readonly ILogger<SiteService> _logger;
 
     public SiteService(
         IVersionService versionService,
         IConfigurationService configService,
-        ILoggingService loggingService,
-        ILogger<SiteService> logger)
+        ILoggingService loggingService)
     {
         _versionService = versionService;
         _configService = configService;
         _loggingService = loggingService;
-        _logger = logger;
     }
 
     public bool RequiresAdministratorPrivileges()
@@ -138,7 +134,7 @@ public class SiteService : ISiteService
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to create site: {ex.Message}");
-            _logger.LogError(ex, "Failed to create site {SiteName}", siteConfig.SiteName);
+            _loggingService.WriteError($"Failed to create site {siteConfig.SiteName}: {ex.Message}");
             return false;
         }
     }
@@ -176,7 +172,7 @@ public class SiteService : ISiteService
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to remove site: {ex.Message}");
-            _logger.LogError(ex, "Failed to remove site {SiteName}", siteName);
+            _loggingService.WriteError($"Failed to remove site {siteName}: {ex.Message}");
             return false;
         }
     }
@@ -210,7 +206,7 @@ public class SiteService : ISiteService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to read installed sites from registry");
+            _loggingService.WriteError($"Failed to read installed sites from registry: {ex.Message}");
         }
 
         return sites;
@@ -241,7 +237,7 @@ public class SiteService : ISiteService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get version for site {SiteName}", siteName);
+            _loggingService.WriteError($"Failed to get version for site {siteName}: {ex.Message}");
             return null;
         }
     }
@@ -259,8 +255,8 @@ public class SiteService : ISiteService
         var arguments = BuildAcuExeArguments(siteConfig, options, isNewInstance: true);
         
         _loggingService.WriteProgress("Executing Acumatica configuration utility...");
-        _logger.LogDebug("ac.exe path: {AcExePath}", acExePath);
-        _logger.LogDebug("Arguments: {Arguments}", string.Join(" ", arguments));
+        _loggingService.WriteDebug($"ac.exe path: {acExePath}");
+        _loggingService.WriteDebug($"Arguments: {string.Join(" ", arguments)}");
 
         using var process = new Process
         {
@@ -296,8 +292,8 @@ public class SiteService : ISiteService
         var arguments = new[] { "-d", siteName };
         
         _loggingService.WriteProgress("Executing site removal...");
-        _logger.LogDebug("ac.exe path: {AcExePath}", acExePath);
-        _logger.LogDebug("Arguments: {Arguments}", string.Join(" ", arguments));
+        _loggingService.WriteDebug($"ac.exe path: {acExePath}");
+        _loggingService.WriteDebug($"Arguments: {string.Join(" ", arguments)}");
 
         using var process = new Process
         {
@@ -382,7 +378,7 @@ public class SiteService : ISiteService
         catch (Exception ex)
         {
             _loggingService.WriteWarning($"Failed to apply development configuration: {ex.Message}");
-            _logger.LogError(ex, "Failed to update web.config for development");
+            _loggingService.WriteError($"Failed to update web.config for development: {ex.Message}");
         }
     }
 }
