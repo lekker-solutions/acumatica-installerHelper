@@ -21,7 +21,7 @@ jobs:
         run: Install-Module -Name Pester -Force -SkipPublisherCheck
 
       - name: Test
-        run: Invoke-Pester -Path AcuInstallerHelper.Tests.ps1
+        run: Invoke-Pester -Path .\tests\ -Recurse
 
   publish:
     if: github.ref == 'refs/heads/main' # This job only runs when the branch is 'main'

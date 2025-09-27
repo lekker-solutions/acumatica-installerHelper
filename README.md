@@ -293,28 +293,36 @@ To run the tests, navigate to the repository root directory and execute:
 
 ```powershell
 # Run all tests
-Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1
+Invoke-Pester .\tests\ -Recurse
 
 # Run tests with detailed output
-Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -Output Detailed
+Invoke-Pester .\tests\ -Recurse -Output Detailed
 
 # Run tests and show results in CI format
-Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -CI
+Invoke-Pester .\tests\ -Recurse -CI
+
+# Run specific test file
+Invoke-Pester .\tests\AcumaticaConfigCmdlets.Tests.ps1
 ```
+
+### Test Files
+
+The test suite is organized into separate files by cmdlet category:
+
+- **`AcumaticaConfigCmdlets.Tests.ps1`**: Tests configuration management cmdlets (Get-AcumaticaConfig, Set-AcumaticaDirectory, etc.)
+- **`AcumaticaVersionCmdlets.Tests.ps1`**: Tests version management cmdlets (Install-AcumaticaVersion, Get-AcumaticaVersion, etc.)
+- **`AcumaticaSiteCmdlets.Tests.ps1`**: Tests site management cmdlets (New-AcumaticaSite, Remove-AcumaticaSite, etc.)
+- **`AcumaticaPatchCmdlets.Tests.ps1`**: Tests patch management cmdlets (Test-AcumaticaPatch, Install-AcumaticaPatch, etc.)
 
 ### Test Coverage
 
 The comprehensive test suite covers:
 
-- **Module Loading and Basic Functionality**: Verifies module import and cmdlet availability
-- **Configuration Management**: Tests all configuration cmdlets with parameter validation
-- **Version Management**: Tests version installation, removal, and listing operations
-- **Site Management**: Tests site creation, removal, updates, and listing operations
-- **Patch Management**: Tests patch-related cmdlets and version support logic
-- **Error Handling and Edge Cases**: Validates graceful error handling for various failure scenarios
-- **Performance and Response Time**: Ensures cmdlets respond within acceptable timeframes
-- **Build and Deployment Verification**: Confirms all required artifacts are present
-- **Integration Tests**: End-to-end functionality validation
+- **Parameter Validation**: Ensures all cmdlets properly validate required parameters and reject invalid input
+- **Parameter Acceptance**: Verifies optional parameters and switches work correctly
+- **Return Types**: Confirms cmdlets return expected data types and structures
+- **Error Handling**: Validates graceful error handling for various failure scenarios
+- **Module Loading**: Tests proper module import and cmdlet availability
 
 ## License
 
