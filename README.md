@@ -1,16 +1,16 @@
-# acumatica-installerHelper
+# AcuInstallerHelper
 
-PowerShell module for managing Acumatica ERP installations, sites, and versions.
+PowerShell module for managing Acumatica ERP installations, sites, versions, and patches. Provides automated installation, site creation/removal, configuration management, and patch operations.
 
 ## Overview
 
-The AcuInstallerHelper module simplifies the process of downloading, installing, and managing Acumatica ERP versions and sites. It provides automated installation from Acumatica's S3 buckets, site creation/removal, and configuration management.
+The AcuInstallerHelper module simplifies the process of downloading, installing, and managing Acumatica ERP versions, sites, and patches. It provides automated installation from Acumatica's download sources, comprehensive site management, and patch operations for maintaining your Acumatica installations.
 
 ## Requirements
 
 - Windows PowerShell 5.1 or higher
 - Administrator privileges (required for site operations)
-- Internet connection (for downloading installers)
+- Internet connection (for downloading installers and patches)
 - SQL Server instance accessible via `(local)` hostname
   - SQL Server must be installed and running
   - Mixed mode or Windows authentication enabled
@@ -35,7 +35,7 @@ Import-Module AcuInstallerHelper
 git clone https://github.com/lekker-solutions/acumatica-installerHelper.git
 
 # Import the module
-Import-Module ./acumatica-installerHelper/AcuInstallerHelper.psd1
+Import-Module ./acumatica-installerHelper/AcuInstallerHelper/AcuInstallerHelper.psd1
 ```
 
 ## Configuration
@@ -56,122 +56,159 @@ The module uses a configuration file (`AcuInstallerHelper_config.json`) to store
 
 The `SiteType` setting controls the default behavior for new sites:
 - **Production** (default): Sites are created with standard production settings
-- **Dev**: Sites are automatically configured for development (compilation disabled, optimizations enabled)
+- **Development**: Sites are automatically configured for development (compilation disabled, optimizations enabled)
 
-You can override this default by using the `-devSite` parameter when creating a site.
-
-## Functions
+## Available Cmdlets
 
 ### Version Management
 
-| Function | Parameters | Description |
-|----------|------------|-------------|
-| **Add-AcuVersion** | - version (alias: v) [string, Mandatory]<br>- debuggerTools (alias: dt) [switch]<br>- preview (alias: p) [switch] | Downloads and installs a specified Acumatica version from builds.acumatica.com. Supports both release and preview builds. |
-| **Remove-AcuVersion** | - version [string, Mandatory] | Removes the specified Acumatica version from the system. |
-| **Get-AcuVersions** | - majorRelease [string]<br>- preview [switch] | Lists available Acumatica versions from the S3 bucket. |
-| **Get-InstalledAcuVersions** | *No parameters* | Displays all locally installed Acumatica versions with install date and size. |
+| Cmdlet | Description |
+|--------|-------------|
+| **Install-AcumaticaVersion** | Downloads and installs a specified Acumatica version |
+| **Uninstall-AcumaticaVersion** | Removes the specified Acumatica version from the system |
+| **Get-AcumaticaVersion** | Lists installed or available Acumatica versions |
 
 ### Site Management
 
-| Function | Parameters | Description |
-|----------|------------|-------------|
-| **Add-AcuSite** | - version (alias: v) [string, Mandatory]<br>- siteName (alias: n) [string, Mandatory]<br>- siteInstallPath (alias: p) [string]<br>- installNewVersion (alias: nv) [switch]<br>- portal (alias: pt) [switch]<br>- devSite (alias: d) [switch]<br>- preview [switch]<br>- debuggerTools (alias: dt) [switch] | Creates a new Acumatica site. Automatically installs the version if not present (with prompt). The devSite flag configures web.config for development. |
-| **Remove-AcuSite** | - siteName (alias: n) [string, Mandatory] | Removes a site registration using ac.exe. Does not remove the database. |
-| **Update-AcuSite** | - siteName [string, Mandatory]<br>- newVersion [string, Mandatory] | Upgrades a site to a new version (currently not implemented). |
+| Cmdlet | Description |
+|--------|-------------|
+| **New-AcumaticaSite** | Creates a new Acumatica site with specified version and configuration |
+| **Remove-AcumaticaSite** | Removes an existing Acumatica site |
+| **Get-AcumaticaSite** | Lists installed Acumatica sites with optional version information |
+| **Update-AcumaticaSite** | Updates an existing site to a new version |
 
 ### Configuration Management
 
-| Function | Parameters | Description |
-|----------|------------|-------------|
-| **Get-AcuDir** | *No parameters* | Returns the base directory where Acumatica installations are stored. |
-| **Get-AcuSiteDir** | *No parameters* | Returns the name of the subdirectory for sites. |
-| **Get-AcuVersionDir** | *No parameters* | Returns the name of the subdirectory for versions. |
-| **Get-InstallDebugTools** | *No parameters* | Returns the default setting for installing debugger tools. |
-| **Get-SiteType** | *No parameters* | Returns the default site type (Dev or Production). |
-| **Set-AcuDir** | - NewPath [string, Mandatory] | Updates the base Acumatica directory path. |
-| **Set-AcuSiteDir** | - NewPath [string, Mandatory] | Updates the sites subdirectory name. |
-| **Set-AcuVersionDir** | - NewPath [string, Mandatory] | Updates the versions subdirectory name. |
-| **Set-InstallDebugTools** | - Value [bool, Mandatory] | Sets the default for installing debugger tools with new versions. |
-| **Set-SiteType** | - Value [string, Mandatory]<br>ValidateSet: "Dev", "Production" | Sets the default site type for new installations. |
+| Cmdlet | Description |
+|--------|-------------|
+| **Get-AcumaticaConfig** | Returns the current module configuration |
+| **Set-AcumaticaDirectory** | Sets the base directory for Acumatica installations |
+| **Set-AcumaticaSiteDirectory** | Sets the directory for Acumatica sites |
+| **Set-AcumaticaVersionDirectory** | Sets the directory for Acumatica versions |
+| **Set-AcumaticaDefaultSiteType** | Sets the default site type (Production or Development) |
+| **Set-AcumaticaInstallDebugTools** | Sets whether to install debug tools by default |
+
+### Patch Management
+
+| Cmdlet | Description |
+|--------|-------------|
+| **Test-AcumaticaPatch** | Checks if patches are available for a specified site |
+| **Install-AcumaticaPatch** | Applies patches to an Acumatica site with optional backup |
+| **Restore-AcumaticaPatch** | Rolls back a patch from an Acumatica site |
+| **Test-AcumaticaPatchTool** | Verifies if the patch tool is available for a specific version |
 
 ## Examples
 
-### Installing a Version
+### Version Management
 
 ```powershell
 # Install a release version
-Add-AcuVersion -version "24.100.0023"
+Install-AcumaticaVersion -Version "24.100.0023"
 
-# Install a preview version with debugger tools
-Add-AcuVersion -version "24.105.0012" -preview -debuggerTools
+# Install a preview version with debug tools
+Install-AcumaticaVersion -Version "24.105.0012" -Preview -DebugTools
 
-# Set default to always install debugger tools
-Set-InstallDebugTools -Value $true
-```
-
-### Creating Sites
-
-```powershell
-# Create a standard site
-Add-AcuSite -version "24.100.0023" -siteName "MyERPSite"
-
-# Create a development site with custom path
-Add-AcuSite -version "24.100.0023" -siteName "DevSite" -siteInstallPath "D:\DevSites\MyDevSite" -devSite
-
-# Create a portal site
-Add-AcuSite -version "24.100.0023" -siteName "CustomerPortal" -portal
-
-# Set default site type to Dev (all new sites will be dev sites)
-Set-SiteType -Value "Dev"
-Add-AcuSite -version "24.100.0023" -siteName "AutoDevSite"  # Automatically configured as dev
-
-# Override the default site type
-Set-SiteType -Value "Dev"
-Add-AcuSite -version "24.100.0023" -siteName "ProdSite" -devSite:$false  # Force production settings
-```
-
-### Managing Installations
-
-```powershell
 # List installed versions
-Get-InstalledAcuVersions
+Get-AcumaticaVersion
 
 # List available versions online
-Get-AcuVersions
+Get-AcumaticaVersion -Available
+
+# List available versions for specific major release
+Get-AcumaticaVersion -Available -MajorRelease "2024.2"
+
+# Include preview versions
+Get-AcumaticaVersion -Available -Preview
 
 # Remove a version
-Remove-AcuVersion -version "23.200.0045"
-
-# Remove a site
-Remove-AcuSite -siteName "OldSite"
+Uninstall-AcumaticaVersion -Version "23.200.0045"
 ```
 
-### Configuration
+### Site Management
 
 ```powershell
+# Create a standard production site
+New-AcumaticaSite -Version "24.100.0023" -Name "MyERPSite"
+
+# Create a development site with custom path
+New-AcumaticaSite -Version "24.100.0023" -Name "DevSite" -Path "D:\DevSites\MyDevSite" -Development
+
+# Create a portal site
+New-AcumaticaSite -Version "24.100.0023" -Name "CustomerPortal" -Portal
+
+# Install version automatically if not present
+New-AcumaticaSite -Version "24.100.0023" -Name "AutoInstallSite" -InstallVersion
+
+# List all sites
+Get-AcumaticaSite
+
+# List sites with version information
+Get-AcumaticaSite -IncludeVersion
+
+# Update a site to a new version
+Update-AcumaticaSite -Name "MyERPSite" -Version "24.200.0001"
+
+# Remove a site
+Remove-AcumaticaSite -Name "OldSite"
+```
+
+### Configuration Management
+
+```powershell
+# View current configuration
+Get-AcumaticaConfig
+
 # Change base installation directory
-Set-AcuDir -NewPath "D:\AcumaticaERP"
+Set-AcumaticaDirectory -Path "D:\AcumaticaERP"
+
+# Set site directory
+Set-AcumaticaSiteDirectory -Path "MySites"
+
+# Set version directory
+Set-AcumaticaVersionDirectory -Path "MyVersions"
 
 # Set default site type for all new sites
-Set-SiteType -Value "Dev"
+Set-AcumaticaDefaultSiteType -SiteType Development
 
-# Check current configuration
-Get-AcuDir
-Get-AcuSiteDir
-Get-AcuVersionDir
-Get-InstallDebugTools
-Get-SiteType
+# Enable debug tools installation by default
+Set-AcumaticaInstallDebugTools -InstallDebugTools $true
+```
+
+### Patch Management
+
+```powershell
+# Check for available patches for a site
+Test-AcumaticaPatch -SiteName "MyERPSite"
+
+# Apply patches to a site
+Install-AcumaticaPatch -SiteName "MyERPSite"
+
+# Apply patches with custom backup location
+Install-AcumaticaPatch -SiteName "MyERPSite" -BackupPath "D:\Backups\MyERPSite_backup.zip"
+
+# Apply patch from a local archive
+Install-AcumaticaPatch -SiteName "MyERPSite" -ArchivePath "C:\Patches\patch.zip"
+
+# Restore/rollback a patch
+Restore-AcumaticaPatch -SiteName "MyERPSite"
+
+# Restore with custom backup path
+Restore-AcumaticaPatch -SiteName "MyERPSite" -BackupPath "D:\Backups\MyERPSite_backup.zip"
+
+# Check if patch tool is available for a version
+Test-AcumaticaPatchTool -Version "24.100.0023"
 ```
 
 ## Features
 
-- **Automatic Version Detection**: When creating a site, the module checks if the required version is installed and offers to download it
-- **Preview Build Support**: Access to both release and preview builds from Acumatica's S3 bucket
-- **Development Mode**: The `-devSite` flag automatically configures web.config for development (disables compilation, enables optimizations)
-- **Default Site Type**: Configure all new sites to be development or production sites by default
-- **Portal Support**: Create portal sites with the `-portal` flag
-- **Debugger Tools**: Option to install Acumatica debugger tools with any version
-- **Default Settings**: Configure default behavior for debugger tools installation and site types
+- **Automated Version Management**: Download and install Acumatica versions with optional debug tools and preview support
+- **Comprehensive Site Management**: Create, update, remove, and list sites with flexible configuration options
+- **Advanced Patch Operations**: Check for patches, apply them with backup support, and rollback when needed
+- **Configuration Persistence**: Store and manage default settings for consistent behavior
+- **Development Mode Support**: Automatic configuration for development sites
+- **Portal Site Support**: Create portal sites with the `-Portal` flag
+- **Preview Build Support**: Access to both release and preview builds
+- **Backup Integration**: Automatic backup creation during patch operations
 
 ## Directory Structure
 
@@ -198,10 +235,10 @@ Acumatica versions must follow the format: `##.###.####` (e.g., "24.100.0023")
 - Administrator privileges are required for most operations
 - The module uses the local SQL Server instance `(local)` for new sites
 - SQL Server must be installed and running on the machine
-- The `(local)` hostname must resolve to your SQL Server instance (this is typically `localhost\SQLEXPRESS` or the default instance)
 - Database names match the site names by default
 - Sites are created in IIS under "Default Web Site" using "DefaultAppPool"
 - The account running the PowerShell session needs appropriate SQL Server permissions to create databases
+- Patch operations create backups by default for safety
 
 ## Troubleshooting
 
@@ -219,7 +256,7 @@ If you encounter errors when creating sites, ensure:
    sqlcmd -S "(local)" -Q "SELECT @@VERSION"
    ```
 
-3. If using SQL Express, you may need to use `(local)\SQLEXPRESS` instead. Currently, the module hardcodes `(local)` in the connection string.
+3. The `(local)` hostname must resolve to your SQL Server instance (this is typically `localhost\SQLEXPRESS` or the default instance). If using SQL Express, you may need to use `(local)\SQLEXPRESS` instead. Currently, the module hardcodes `(local)` in the connection string.
 
 ### Assembly Loading Warnings
 
@@ -229,6 +266,10 @@ When creating sites with newer Acumatica versions (2024 R1+), you may see warnin
 ```
 
 These are cosmetic warnings from ac.exe as it scans assemblies and can be safely ignored. Your site will still be created successfully.
+
+### Patch Tool Availability
+
+Patch operations require the Acumatica patch tool to be available for the specific version. Use `Test-AcumaticaPatchTool` to verify availability before attempting patch operations.
 
 ## Testing
 
@@ -257,23 +298,8 @@ Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1
 # Run tests with detailed output
 Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -Output Detailed
 
-# Run tests with code coverage (if applicable)
-Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -CodeCoverage .\AcuInstallerHelper\*.dll
-
 # Run tests and show results in CI format
 Invoke-Pester .\tests\AcuInstallerHelper.Tests.ps1 -CI
-```
-
-### Alternative: Run from tests directory
-
-You can also run the tests from within the tests directory:
-
-```powershell
-# Navigate to tests directory
-cd tests
-
-# Run tests
-Invoke-Pester .\AcuInstallerHelper.Tests.ps1 -Output Detailed
 ```
 
 ### Test Coverage
@@ -289,33 +315,6 @@ The comprehensive test suite covers:
 - **Performance and Response Time**: Ensures cmdlets respond within acceptable timeframes
 - **Build and Deployment Verification**: Confirms all required artifacts are present
 - **Integration Tests**: End-to-end functionality validation
-
-### Test Organization
-
-The test file is organized into logical sections:
-
-1. **Module Loading and Basic Functionality** - Core module operations
-2. **Configuration Management** - Settings and configuration validation
-3. **Version Management** - Version lifecycle operations
-4. **Site Management** - Site lifecycle operations  
-5. **Patch Management** - Patch functionality and version support
-6. **Error Handling and Edge Cases** - Robustness validation
-7. **Performance and Response Time** - Performance characteristics
-8. **Build and Deployment Verification** - Artifact validation
-9. **Integration Test Summary** - Overall system health check
-
-### Test Features
-
-- **Comprehensive Parameter Validation**: All cmdlets tested with various parameter combinations
-- **Version Support Logic Testing**: Validates patch version restrictions (25R1+ requirement)
-- **Mocking**: Uses PowerShell mocking to avoid making actual system changes during testing
-- **Performance Monitoring**: Tracks cmdlet response times to ensure good performance
-- **CI/CD Ready**: Designed to run in automated environments without dependencies
-- **Clear Test Output**: Provides colored success indicators and detailed failure information
-
-### Continuous Integration
-
-The tests are designed to run in CI/CD pipelines and use appropriate mocking to avoid making actual system changes during testing. Use the `-CI` parameter for automated environments.
 
 ## License
 

@@ -30,7 +30,7 @@
     Copyright         = '(c) Lekker Solutions LLC. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'Assists with the installation, removal and patching of Acumatica Sites and Versions'
+    Description       = 'PowerShell module for managing Acumatica ERP installations, sites, versions, and patches. Provides automated installation, site creation/removal, configuration management, and patch operations.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '5.1'
@@ -85,7 +85,11 @@
         'Set-AcumaticaSiteDirectory',
         'Set-AcumaticaVersionDirectory',
         'Set-AcumaticaDefaultSiteType',
-        'Set-AcumaticaInstallDebugTools'
+        'Set-AcumaticaInstallDebugTools',
+        'Test-AcumaticaPatch',
+        'Install-AcumaticaPatch',
+        'Restore-AcumaticaPatch',
+        'Test-AcumaticaPatchTool'
     )
 
     # Variables to export from this module
@@ -109,7 +113,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags         = @('Acumatica', 'ERP', 'Installation', 'Configuration')
+            Tags         = @('Acumatica', 'ERP', 'Installation', 'Configuration', 'Site-Management', 'Version-Management', 'Patching')
 
             # A URL to the license for this module.
             LicenseUri   = 'https://www.gnu.org/licenses/gpl-3.0.html#license-text'
@@ -123,10 +127,11 @@
             # ReleaseNotes of this module
             ReleaseNotes = @'
             Version 1.0
-            - Converted to Binary Module
-            - Added integration tests
-            - Added Patching Support
+            - Converted to Binary Module with C# cmdlets
+            - Added comprehensive integration tests
+            - Added Patching Support (Test-AcumaticaPatch, Install-AcumaticaPatch, Restore-AcumaticaPatch, Test-AcumaticaPatchTool)
             - Added Support for new ac.exe command arguments in 25R2
+            - Improved configuration management with persistent settings
 '@
 
             # Prerelease string of this module
