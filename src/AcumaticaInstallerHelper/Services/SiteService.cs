@@ -29,7 +29,7 @@ public class SiteService : ISiteService
         return !principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
 
-    public async Task<bool> CreateSiteAsync(SiteConfiguration siteConfig, SiteInstallOptions options)
+    public bool CreateSite(SiteConfiguration siteConfig, SiteInstallOptions options)
     {
         _loggingService.WriteHeader("Acumatica Site Installation", $"Version {siteConfig.Version} • Site: {siteConfig.SiteName}");
         
@@ -66,7 +66,7 @@ public class SiteService : ISiteService
                 _loggingService.WriteSection("Installing Required Version");
                 
                 bool useDebugTools = options.DebuggerTools || _configService.GetInstallDebugTools();
-                bool installSuccess = await _versionService.InstallVersionAsync(siteConfig.Version, options.Preview, useDebugTools);
+                bool installSuccess = _versionService.InstallVersion(siteConfig.Version, options.Preview, useDebugTools);
                 
                 if (!installSuccess)
                 {
@@ -109,7 +109,7 @@ public class SiteService : ISiteService
             _loggingService.WriteSection("Installing Site");
             
             // Install site
-            var success = await ExecuteAcuExeAsync(siteConfig, options);
+            var success = ExecuteAcuExe(siteConfig, options);
             
             if (success && isDev)
             {
@@ -139,7 +139,7 @@ public class SiteService : ISiteService
         }
     }
 
-    public async Task<bool> RemoveSiteAsync(string siteName)
+    public bool RemoveSite(string siteName)
     {
         _loggingService.WriteHeader("Acumatica Site Removal", $"Site: {siteName}");
         
@@ -156,7 +156,7 @@ public class SiteService : ISiteService
             
             _loggingService.WriteInfo($"Found site using version: {version}");
             
-            var success = await ExecuteAcuExeRemovalAsync(siteName, version);
+            var success = ExecuteAcuExeRemoval(siteName, version);
             
             if (success)
             {
@@ -177,7 +177,7 @@ public class SiteService : ISiteService
         }
     }
 
-    public Task<bool> UpdateSiteAsync(string siteName, string newVersion)
+    public bool UpdateSite(string siteName, string newVersion)
     {
         _loggingService.WriteHeader("Acumatica Site Update", $"Site: {siteName} → Version: {newVersion}");
         
@@ -186,7 +186,7 @@ public class SiteService : ISiteService
         _loggingService.WriteWarning("Update-AcuSite is not yet implemented");
         _loggingService.WriteInfo("This feature will be available in a future version");
         
-        return Task.FromResult(false);
+        return false;
     }
 
     public List<string> GetInstalledSites()
@@ -242,7 +242,7 @@ public class SiteService : ISiteService
         }
     }
 
-    private async Task<bool> ExecuteAcuExeAsync(SiteConfiguration siteConfig, SiteInstallOptions options)
+    private bool ExecuteAcuExe(SiteConfiguration siteConfig, SiteInstallOptions options)
     {
         var acExePath = _versionService.GetAcuExePath(siteConfig.Version);
         
@@ -295,7 +295,7 @@ public class SiteService : ISiteService
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        await process.WaitForExitAsync();
+        process.WaitForExit();
 
         if (process.ExitCode == 0)
         {
@@ -317,7 +317,7 @@ public class SiteService : ISiteService
         }
     }
 
-    private async Task<bool> ExecuteAcuExeRemovalAsync(string siteName, string version)
+    private bool ExecuteAcuExeRemoval(string siteName, string version)
     {
         var acExePath = _versionService.GetAcuExePath(version);
         
@@ -367,7 +367,7 @@ public class SiteService : ISiteService
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        await process.WaitForExitAsync();
+        process.WaitForExit();
 
         if (process.ExitCode == 0)
         {

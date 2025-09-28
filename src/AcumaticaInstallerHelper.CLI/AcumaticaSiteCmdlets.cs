@@ -33,7 +33,7 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Install debug tools with version")]
         public SwitchParameter DebugTools { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
@@ -46,7 +46,7 @@ namespace AcumaticaInstallerHelper.CLI
                     DebuggerTools     = DebugTools.IsPresent
                 };
 
-                var success = await AcumaticaManager.CreateSiteAsync(Version, Name, Path, options);
+                var success = AcumaticaManager.CreateSite(Version, Name, Path, options);
                 WriteObject(success);
             
                 if (success)
@@ -77,11 +77,11 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Name { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var success = await AcumaticaManager.RemoveSiteAsync(Name);
+                var success = AcumaticaManager.RemoveSite(Name);
                 WriteObject(success);
             
                 if (success)
@@ -111,7 +111,7 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Include version information")]
         public SwitchParameter IncludeVersion { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
@@ -151,11 +151,11 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Version { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var success = await AcumaticaManager.UpdateSiteAsync(Name, Version);
+                var success = AcumaticaManager.UpdateSite(Name, Version);
                 WriteObject(success);
             
                 if (success)

@@ -112,7 +112,7 @@ Describe "AcumaticaPatchCmdlets" {
         It "Should accept valid version format" {
             # This may return false if version isn't installed, but parameter validation should pass
             try {
-                $result = Test-AcumaticaPatchTool -Version "2023.2.001"
+                $result = Test-AcumaticaPatchTool -Version "24.215.0011"
                 $result | Should -BeOfType [bool]
             } catch {
                 # Expected if version doesn't exist

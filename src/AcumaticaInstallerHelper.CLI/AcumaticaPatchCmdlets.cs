@@ -11,25 +11,16 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string SiteName { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var result = await AcumaticaManager.CheckForPatchesAsync(SiteName);
+                var result = AcumaticaManager.CheckForPatches(SiteName);
                 WriteObject(result);
-
-                if (result.HasPatch)
-                {
-                    WriteInformation($"Patch found for site '{SiteName}': {result.Version} P{result.PatchNumber}", new string[] { "PatchFound" });
-                }
-                else
-                {
-                    WriteInformation($"No patches available for site '{SiteName}'", new string[] { "NoPatch" });
-                }
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "CheckPatchException", ErrorCategory.NotSpecified, SiteName));
+                WriteError(new ErrorRecord(ex, "CheckForPatchesException", ErrorCategory.NotSpecified, SiteName));
             }
         }
     }
@@ -48,33 +39,26 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Path to local patch archive")]
         public string? ArchivePath { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
                 PatchResult result;
-
+                
                 if (!string.IsNullOrEmpty(ArchivePath))
                 {
-                    result = await AcumaticaManager.ApplyPatchFromArchiveAsync(SiteName, ArchivePath, BackupPath);
+                    result = AcumaticaManager.ApplyPatchFromArchive(SiteName, ArchivePath, BackupPath);
                 }
                 else
                 {
-                    result = await AcumaticaManager.ApplyPatchAsync(SiteName, BackupPath);
+                    result = AcumaticaManager.ApplyPatch(SiteName, BackupPath);
                 }
-
+                
                 WriteObject(result);
-
+                
                 if (result.Success)
                 {
-                    if (!string.IsNullOrEmpty(result.Version) && !string.IsNullOrEmpty(result.PatchNumber))
-                    {
-                        WriteInformation($"Successfully applied patch {result.Version} P{result.PatchNumber} to site '{SiteName}'", new string[] { "Success" });
-                    }
-                    else
-                    {
-                        WriteInformation($"Patch operation completed for site '{SiteName}'", new string[] { "Success" });
-                    }
+                    WriteInformation($"Successfully applied patch to site '{SiteName}'", new string[] { "Success" });
                 }
                 else
                 {
@@ -103,13 +87,13 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Path to backup archive")]
         public string? BackupPath { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var result = await AcumaticaManager.RollbackPatchAsync(SiteName, BackupPath);
+                var result = AcumaticaManager.RollbackPatch(SiteName, BackupPath);
                 WriteObject(result);
-
+                
                 if (result.Success)
                 {
                     WriteInformation($"Successfully rolled back patch for site '{SiteName}'", new string[] { "Success" });
@@ -138,25 +122,25 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Version { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var isAvailable = await AcumaticaManager.IsPatchToolAvailableAsync(Version);
+                var isAvailable = AcumaticaManager.IsPatchToolAvailable(Version);
                 WriteObject(isAvailable);
-
+                
                 if (isAvailable)
                 {
-                    WriteInformation($"PatchTool is available for version {Version}", new string[] { "Available" });
+                    WriteInformation($"Patch tool is available for version {Version}", new string[] { "Success" });
                 }
                 else
                 {
-                    WriteWarning($"PatchTool is not available for version {Version}. Ensure the version is installed.");
+                    WriteWarning($"Patch tool is not available for version {Version}");
                 }
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex, "TestPatchToolException", ErrorCategory.NotSpecified, Version));
+                WriteError(new ErrorRecord(ex, "CheckPatchToolException", ErrorCategory.NotSpecified, Version));
             }
         }
     }

@@ -15,7 +15,7 @@
     ModuleVersion     = '1.0'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Core')
 
     # ID used to uniquely identify this module
     GUID              = '1b6c3d2f-b6df-48c8-8c6b-d324e89badf7'
@@ -30,10 +30,10 @@
     Copyright         = '(c) Lekker Solutions LLC. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'PowerShell module for managing Acumatica ERP installations, sites, versions, and patches. Provides automated installation, site creation/removal, configuration management, and patch operations.'
+    Description       = 'PowerShell module for managing Acumatica ERP installations, sites, versions, and patches. Provides automated installation, site creation/removal, configuration management, and patch operations. Requires PowerShell 7.0 or higher.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '5.1'
+    PowerShellVersion = '7.0'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''

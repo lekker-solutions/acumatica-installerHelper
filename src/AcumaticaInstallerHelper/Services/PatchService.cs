@@ -19,7 +19,7 @@ public class PatchService : IPatchService
         _loggingService = loggingService;
     }
 
-    public Task<string> GetPatchToolPathAsync(string version)
+    public string GetPatchToolPath(string version)
     {
         if (!IsPatchingSupportedForVersion(version))
         {
@@ -35,29 +35,29 @@ public class PatchService : IPatchService
             throw new FileNotFoundException($"PatchTool not found for version {version}", patchToolPath);
         }
 
-        return Task.FromResult(patchToolPath);
+        return patchToolPath;
     }
 
-    public Task<bool> IsPatchToolAvailableAsync(string version)
+    public bool IsPatchToolAvailable(string version)
     {
         try
         {
             if (!IsPatchingSupportedForVersion(version))
             {
-                return Task.FromResult(false);
+                return false;
             }
 
             var patchToolPath = _versionService.GetPatchUtilityPath(version);
-            return Task.FromResult(File.Exists(patchToolPath));
+            return File.Exists(patchToolPath);
         }
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to check patch tool availability for version {version}: {ex.Message}");
-            return Task.FromResult(false);
+            return false;
         }
     }
 
-    public async Task<PatchCheckResult> CheckForPatchesAsync(string sitePath, string version)
+    public PatchCheckResult CheckForPatches(string sitePath, string version)
     {
         _loggingService.WriteDebug($"Checking for patches at site path: {sitePath} using version {version}");
 
@@ -72,10 +72,10 @@ public class PatchService : IPatchService
 
         try
         {
-            var patchToolPath = await GetPatchToolPathAsync(version);
+            var patchToolPath = GetPatchToolPath(version);
             var arguments = $"check --path \"{sitePath}\"";
 
-            var output = await ExecutePatchToolAsync(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, arguments);
 
             var match = PatchFoundRegex.Match(output);
             if (match.Success)
@@ -106,7 +106,7 @@ public class PatchService : IPatchService
         }
     }
 
-    public async Task<PatchResult> ApplyPatchAsync(string sitePath, string version, string? backupPath = null)
+    public PatchResult ApplyPatch(string sitePath, string version, string? backupPath = null)
     {
         _loggingService.WriteDebug($"Applying patch at site path: {sitePath} using version {version}");
 
@@ -121,7 +121,7 @@ public class PatchService : IPatchService
 
         try
         {
-            var patchToolPath = await GetPatchToolPathAsync(version);
+            var patchToolPath = GetPatchToolPath(version);
             var arguments = $"patch --path \"{sitePath}\"";
             
             if (!string.IsNullOrEmpty(backupPath))
@@ -129,7 +129,7 @@ public class PatchService : IPatchService
                 arguments += $" --zip \"{backupPath}\"";
             }
 
-            var output = await ExecutePatchToolAsync(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, arguments);
 
             var match = PatchAppliedRegex.Match(output);
             if (match.Success)
@@ -169,7 +169,7 @@ public class PatchService : IPatchService
         }
     }
 
-    public async Task<PatchResult> ApplyPatchFromArchiveAsync(string sitePath, string archivePath, string version, string? backupPath = null)
+    public PatchResult ApplyPatchFromArchive(string sitePath, string archivePath, string version, string? backupPath = null)
     {
         _loggingService.WriteDebug($"Applying patch from archive {archivePath} at site path: {sitePath} using version {version}");
 
@@ -184,7 +184,7 @@ public class PatchService : IPatchService
 
         try
         {
-            var patchToolPath = await GetPatchToolPathAsync(version);
+            var patchToolPath = GetPatchToolPath(version);
             var arguments = $"patch --path \"{sitePath}\" --archive \"{archivePath}\"";
             
             if (!string.IsNullOrEmpty(backupPath))
@@ -192,7 +192,7 @@ public class PatchService : IPatchService
                 arguments += $" --zip \"{backupPath}\"";
             }
 
-            var output = await ExecutePatchToolAsync(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, arguments);
 
             var match = PatchAppliedRegex.Match(output);
             if (match.Success)
@@ -223,7 +223,7 @@ public class PatchService : IPatchService
         }
     }
 
-    public async Task<PatchResult> RollbackPatchAsync(string sitePath, string version, string? backupPath = null)
+    public PatchResult RollbackPatch(string sitePath, string version, string? backupPath = null)
     {
         _loggingService.WriteDebug($"Rolling back patch at site path: {sitePath} using version {version}");
 
@@ -238,7 +238,7 @@ public class PatchService : IPatchService
 
         try
         {
-            var patchToolPath = await GetPatchToolPathAsync(version);
+            var patchToolPath = GetPatchToolPath(version);
             var arguments = $"rollback --path \"{sitePath}\"";
             
             if (!string.IsNullOrEmpty(backupPath))
@@ -246,7 +246,7 @@ public class PatchService : IPatchService
                 arguments += $" --zip \"{backupPath}\"";
             }
 
-            var output = await ExecutePatchToolAsync(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, arguments);
 
             if (output.Contains("Rollback completed"))
             {
@@ -284,7 +284,7 @@ public class PatchService : IPatchService
     }
 
 
-    private async Task<string> ExecutePatchToolAsync(string patchToolPath, string arguments)
+    private string ExecutePatchTool(string patchToolPath, string arguments)
     {
         _loggingService.WriteDebug($"Executing PatchTool with arguments: {arguments}");
 
@@ -303,10 +303,10 @@ public class PatchService : IPatchService
 
         process.Start();
         
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        var output = process.StandardOutput.ReadToEnd();
+        var error = process.StandardError.ReadToEnd();
         
-        await process.WaitForExitAsync();
+        process.WaitForExit();
 
         if (process.ExitCode != 0 && !string.IsNullOrEmpty(error))
         {

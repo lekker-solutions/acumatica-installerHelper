@@ -17,11 +17,11 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Install debugger tools")]
         public SwitchParameter DebugTools { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var success = await AcumaticaManager.InstallVersionAsync(Version, Preview.IsPresent, DebugTools.IsPresent);
+                var success = AcumaticaManager.InstallVersion(Version, Preview.IsPresent, DebugTools.IsPresent);
                 WriteObject(success);
             
                 if (success)
@@ -52,11 +52,11 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Version { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
-                var success = await AcumaticaManager.RemoveVersionAsync(Version);
+                var success = AcumaticaManager.RemoveVersion(Version);
                 WriteObject(success);
             
                 if (success)
@@ -92,13 +92,13 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Include preview versions")]
         public SwitchParameter Preview { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
                 if (Available.IsPresent)
                 {
-                    var availableVersions = await AcumaticaManager.GetAvailableVersionsAsync(MajorRelease, Preview.IsPresent);
+                    var availableVersions = AcumaticaManager.GetAvailableVersions(MajorRelease, Preview.IsPresent);
                     WriteObject(availableVersions, true);
                 }
                 else

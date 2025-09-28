@@ -9,7 +9,7 @@ public class VersionService : IVersionService
     private readonly IConfigurationService _configService;
     private readonly ILoggingService _loggingService;
     private readonly HttpClient _httpClient;
-    
+
     private static readonly Regex VersionRegex = new(@"^\d{2}\.\d{3}\.\d{4}$", RegexOptions.Compiled);
 
     public VersionService(
@@ -25,13 +25,13 @@ public class VersionService : IVersionService
     public void ValidateVersionFormat(string version)
     {
         _loggingService.WriteDebug($"Validating version format: {version}");
-        
+
         if (!VersionRegex.IsMatch(version))
         {
             _loggingService.WriteError($"Invalid version format: {version}");
             throw new VersionFormatException(version);
         }
-        
+
         _loggingService.WriteDebug("Version format is valid");
     }
 
@@ -64,7 +64,7 @@ public class VersionService : IVersionService
     public List<AcumaticaVersion> GetInstalledVersions()
     {
         var versionsPath = Path.Combine(_configService.GetAcumaticaDirectory(), _configService.GetVersionDirectory());
-        
+
         if (!Directory.Exists(versionsPath))
         {
             _loggingService.WriteDebug($"Versions directory does not exist: {versionsPath}");
@@ -72,11 +72,11 @@ public class VersionService : IVersionService
         }
 
         var versions = new List<AcumaticaVersion>();
-        
+
         foreach (var directory in Directory.GetDirectories(versionsPath))
         {
             var versionName = Path.GetFileName(directory);
-            
+
             if (!VersionRegex.IsMatch(versionName))
                 continue;
 
@@ -84,7 +84,7 @@ public class VersionService : IVersionService
             if (!File.Exists(acExePath))
                 continue;
 
-            var version = new AcumaticaVersion
+            AcumaticaVersion version = new()
             {
                 Version = versionName,
                 Path = directory,
@@ -98,12 +98,12 @@ public class VersionService : IVersionService
         return versions.OrderByDescending(v => v.InstallDate).ToList();
     }
 
-    public async Task<bool> InstallVersionAsync(string version, bool isPreview = false, bool installDebugTools = false)
+    public bool InstallVersion(string version, bool isPreview = false, bool installDebugTools = false)
     {
         ValidateVersionFormat(version);
-        
+
         _loggingService.WriteHeader("Acumatica Version Installation", $"Version {version}");
-        
+
         if (IsVersionInstalled(version))
         {
             _loggingService.WriteWarning($"Version {version} is already installed");
@@ -113,16 +113,16 @@ public class VersionService : IVersionService
         try
         {
             _loggingService.WriteSection("Downloading Version");
-            
-            var downloadUrl = GetDownloadUrl(version, isPreview, installDebugTools);
+
+            string downloadUrl = GetDownloadUrl(version, isPreview);
             _loggingService.WriteInfo($"Download URL: {downloadUrl}");
-            
-            var tempFile = await DownloadVersionAsync(downloadUrl, version);
-            
+
+            var tempFile = DownloadVersion(downloadUrl, version);
+
             _loggingService.WriteSection("Installing Version");
-            
-            var success = await InstallMsiAsync(tempFile, version);
-            
+
+            var success = InstallMsi(tempFile, version);
+
             if (File.Exists(tempFile))
             {
                 File.Delete(tempFile);
@@ -130,32 +130,30 @@ public class VersionService : IVersionService
             }
 
             if (success)
-            {
-                _loggingService.WriteSummary("Version Installation", "Completed Successfully", new Dictionary<string, string>
-                {
-                    ["Version"] = version,
-                    ["Install Path"] = GetVersionPath(version),
-                    ["Preview"] = isPreview ? "Yes" : "No",
-                    ["Debug Tools"] = installDebugTools ? "Yes" : "No"
-                });
-            }
+                _loggingService.WriteSummary("Version Installation", "Completed Successfully",
+                    new Dictionary<string, string>
+                    {
+                        ["Version"] = version,
+                        ["Install Path"] = GetVersionPath(version),
+                        ["Preview"] = isPreview ? "Yes" : "No",
+                        ["Debug Tools"] = installDebugTools ? "Yes" : "No"
+                    });
 
             return success;
         }
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to install version {version}: {ex.Message}");
-            _loggingService.WriteError($"Failed to install version {version}: {ex.Message}");
             return false;
         }
     }
 
-    public async Task<bool> RemoveVersionAsync(string version)
+    public bool RemoveVersion(string version)
     {
         ValidateVersionFormat(version);
-        
+
         _loggingService.WriteHeader("Acumatica Version Removal", $"Version {version}");
-        
+
         if (!IsVersionInstalled(version))
         {
             _loggingService.WriteWarning($"Version {version} is not installed");
@@ -165,11 +163,11 @@ public class VersionService : IVersionService
         try
         {
             var versionPath = GetVersionPath(version);
-            var size = GetDirectorySize(versionPath);
-            
+            long size = GetDirectorySize(versionPath);
+
             _loggingService.WriteInfo($"Removing version from: {versionPath}");
             _loggingService.WriteInfo($"Freeing up: {FormatBytes(size)}");
-            
+
             if (!_loggingService.PromptYesNo($"Are you sure you want to remove version {version}?"))
             {
                 _loggingService.WriteInfo("Removal cancelled");
@@ -177,7 +175,7 @@ public class VersionService : IVersionService
             }
 
             Directory.Delete(versionPath, true);
-            
+
             _loggingService.WriteSummary("Version Removal", "Completed Successfully", new Dictionary<string, string>
             {
                 ["Version"] = version,
@@ -189,12 +187,11 @@ public class VersionService : IVersionService
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to remove version {version}: {ex.Message}");
-            _loggingService.WriteError($"Failed to remove version {version}: {ex.Message}");
             return false;
         }
     }
 
-    public async Task<List<AcumaticaVersion>> GetAvailableVersionsAsync(string? majorRelease = null, bool preview = false)
+    public List<AcumaticaVersion> GetAvailableVersions(string? majorRelease = null, bool preview = false)
     {
         // TODO: Implement S3 bucket listing
         // For now, return empty list - this would require AWS SDK implementation
@@ -202,43 +199,76 @@ public class VersionService : IVersionService
         return new List<AcumaticaVersion>();
     }
 
-    private string GetDownloadUrl(string version, bool isPreview, bool installDebugTools)
+    private string GetDownloadUrl(string version, bool isPreview)
     {
         var baseUrl = "https://acumatica-builds.s3.amazonaws.com";
-        var buildType = isPreview ? "preview" : "release";
-        var toolsType = installDebugTools ? "_Tools" : "";
-        
-        return $"{baseUrl}/{buildType}/{version}/AcumaticaERP{toolsType}_{version}.msi";
+
+        // Get Major
+        string[] parts = version.Split('.');
+        int minor = int.Parse(parts[1]);
+        var roundedMinor = (int)Math.Round(minor / 100.0);
+        var majorVersion = $"{parts[0]}.{roundedMinor}";
+
+        var url = $"{baseUrl}/builds/";
+        if (isPreview)
+            // Preview versions follow the builds/preview/major.minor/version/AcumaticaERP/ pattern
+            url += "preview/";
+
+        url += $"{majorVersion}/{version}/AcumaticaERP/AcumaticaERPInstall.msi";
+        return url;
     }
 
-    private async Task<string> DownloadVersionAsync(string url, string version)
+    private string DownloadVersion(string url, string version)
     {
         var tempFile = Path.Combine(Path.GetTempPath(), $"AcumaticaERP_{version}.msi");
-        
         _loggingService.WriteProgress("Downloading installer...");
-        
-        using var response = await _httpClient.GetAsync(url);
+
+        using HttpResponseMessage response = _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
         response.EnsureSuccessStatusCode();
-        
-        await using var fileStream = File.Create(tempFile);
-        await response.Content.CopyToAsync(fileStream);
-        
+
+        long totalBytes = response.Content.Headers.ContentLength ?? -1;
+        using Stream contentStream = response.Content.ReadAsStreamAsync().Result;
+        using FileStream fileStream = File.Create(tempFile);
+
+        var buffer = new byte[8192];
+        long downloadedBytes = 0;
+        int bytesRead;
+        var lastReportedPercentage = 0;
+
+        _loggingService.WriteProgressBar("Downloading version " + version, 0);
+        while ((bytesRead = contentStream.ReadAsync(buffer, 0, buffer.Length).Result) > 0)
+        {
+            fileStream.WriteAsync(buffer, 0, bytesRead).Wait();
+            downloadedBytes += bytesRead;
+
+            if (totalBytes > 0)
+            {
+                var percentage = (int)(downloadedBytes * 100 / totalBytes);
+                int percentageTens = percentage / 10 * 10; // Round down to nearest 10
+
+                if (percentageTens > lastReportedPercentage)
+                {
+                    _loggingService.WriteProgressBar("                    ", percentageTens);
+                    lastReportedPercentage = percentageTens;
+                }
+            }
+        }
+
         _loggingService.WriteSuccess($"Downloaded to: {tempFile}");
-        
         return tempFile;
     }
 
-    private async Task<bool> InstallMsiAsync(string msiPath, string version)
+    private bool InstallMsi(string msiPath, string version)
     {
         var installPath = GetVersionPath(version);
         Directory.CreateDirectory(installPath);
 
-        var arguments = $"/i \"{msiPath}\" /quiet INSTALLLOCATION=\"{installPath}\"";
-        
+        var arguments = $"/a \"{msiPath}\" /qb TARGETDIR=\"{installPath}\"";
+
         _loggingService.WriteProgress("Running MSI installer...");
         _loggingService.WriteDebug($"MSI install arguments: {arguments}");
 
-        using var process = new Process
+        using Process process = new()
         {
             StartInfo = new ProcessStartInfo
             {
@@ -251,19 +281,31 @@ public class VersionService : IVersionService
             }
         };
 
+        process.OutputDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+                _loggingService.WriteDebug(e.Data);
+        };
+
+        process.ErrorDataReceived += (sender, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+                _loggingService.WriteError(e.Data);
+        };
+
         process.Start();
-        await process.WaitForExitAsync();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        process.WaitForExit();
 
         if (process.ExitCode == 0)
         {
             _loggingService.WriteSuccess("MSI installation completed successfully");
             return true;
         }
-        else
-        {
-            _loggingService.WriteError($"MSI installation failed with exit code: {process.ExitCode}");
-            return false;
-        }
+
+        _loggingService.WriteError($"MSI installation failed with exit code: {process.ExitCode}");
+        return false;
     }
 
     private static long GetDirectorySize(string path)
@@ -274,7 +316,7 @@ public class VersionService : IVersionService
         try
         {
             return Directory.GetFiles(path, "*", SearchOption.AllDirectories)
-                           .Sum(file => new FileInfo(file).Length);
+                            .Sum(file => new FileInfo(file).Length);
         }
         catch
         {
@@ -285,15 +327,15 @@ public class VersionService : IVersionService
     private static string FormatBytes(long bytes)
     {
         string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
-        int counter = 0;
+        var counter = 0;
         decimal number = bytes;
-        
+
         while (Math.Round(number / 1024) >= 1)
         {
             number /= 1024;
             counter++;
         }
-        
+
         return $"{number:n1} {suffixes[counter]}";
     }
 }

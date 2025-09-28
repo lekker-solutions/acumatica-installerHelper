@@ -22,19 +22,5 @@ namespace AcumaticaInstallerHelper.CLI
         {
             _acumaticaManager = ServiceContainer.GetService<AcumaticaManager>();
         }
-
-        protected override void ProcessRecord()
-        {
-            try
-            {
-                ProcessRecordAsync().GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(ex, "CmdletException", ErrorCategory.NotSpecified, null));
-            }
-        }
-
-        protected abstract Task ProcessRecordAsync();
     }
 }

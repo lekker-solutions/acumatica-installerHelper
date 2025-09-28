@@ -10,7 +10,8 @@
       "Bash(pwsh:*)",
       "Bash(dotnet clean:*)",
       "Bash(mv:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []

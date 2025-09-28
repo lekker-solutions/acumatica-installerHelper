@@ -26,14 +26,14 @@ public class AcumaticaManager
     }
 
     // Version Management
-    public async Task<bool> InstallVersionAsync(string version, bool isPreview = false, bool installDebugTools = false)
+    public bool InstallVersion(string version, bool isPreview = false, bool installDebugTools = false)
     {
-        return await _versionService.InstallVersionAsync(version, isPreview, installDebugTools);
+        return _versionService.InstallVersion(version, isPreview, installDebugTools);
     }
 
-    public async Task<bool> RemoveVersionAsync(string version)
+    public bool RemoveVersion(string version)
     {
-        return await _versionService.RemoveVersionAsync(version);
+        return _versionService.RemoveVersion(version);
     }
 
     public List<AcumaticaVersion> GetInstalledVersions()
@@ -41,9 +41,9 @@ public class AcumaticaManager
         return _versionService.GetInstalledVersions();
     }
 
-    public async Task<List<AcumaticaVersion>> GetAvailableVersionsAsync(string? majorRelease = null, bool preview = false)
+    public List<AcumaticaVersion> GetAvailableVersions(string? majorRelease = null, bool preview = false)
     {
-        return await _versionService.GetAvailableVersionsAsync(majorRelease, preview);
+        return _versionService.GetAvailableVersions(majorRelease, preview);
     }
 
     public bool IsVersionInstalled(string version)
@@ -52,7 +52,7 @@ public class AcumaticaManager
     }
 
     // Site Management
-    public async Task<bool> CreateSiteAsync(string version, string siteName, string? siteInstallPath = null, SiteInstallOptions? options = null)
+    public bool CreateSite(string version, string siteName, string? siteInstallPath = null, SiteInstallOptions? options = null)
     {
         options ??= new SiteInstallOptions();
         
@@ -66,17 +66,17 @@ public class AcumaticaManager
             IsPreview = options.Preview
         };
 
-        return await _siteService.CreateSiteAsync(siteConfig, options);
+        return _siteService.CreateSite(siteConfig, options);
     }
 
-    public async Task<bool> RemoveSiteAsync(string siteName)
+    public bool RemoveSite(string siteName)
     {
-        return await _siteService.RemoveSiteAsync(siteName);
+        return _siteService.RemoveSite(siteName);
     }
 
-    public async Task<bool> UpdateSiteAsync(string siteName, string newVersion)
+    public bool UpdateSite(string siteName, string newVersion)
     {
-        return await _siteService.UpdateSiteAsync(siteName, newVersion);
+        return _siteService.UpdateSite(siteName, newVersion);
     }
 
     public List<string> GetInstalledSites()
@@ -152,7 +152,7 @@ public class AcumaticaManager
     }
 
     // Patch Management
-    public async Task<PatchCheckResult> CheckForPatchesAsync(string siteName)
+    public PatchCheckResult CheckForPatches(string siteName)
     {
         var sitePath = GetSitePath(siteName);
         var version = GetSiteVersion(siteName);
@@ -160,10 +160,10 @@ public class AcumaticaManager
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return await _patchService.CheckForPatchesAsync(sitePath, version);
+        return _patchService.CheckForPatches(sitePath, version);
     }
 
-    public async Task<PatchResult> ApplyPatchAsync(string siteName, string? backupPath = null)
+    public PatchResult ApplyPatch(string siteName, string? backupPath = null)
     {
         var sitePath = GetSitePath(siteName);
         var version = GetSiteVersion(siteName);
@@ -171,10 +171,10 @@ public class AcumaticaManager
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return await _patchService.ApplyPatchAsync(sitePath, version, backupPath);
+        return _patchService.ApplyPatch(sitePath, version, backupPath);
     }
 
-    public async Task<PatchResult> ApplyPatchFromArchiveAsync(string siteName, string archivePath, string? backupPath = null)
+    public PatchResult ApplyPatchFromArchive(string siteName, string archivePath, string? backupPath = null)
     {
         var sitePath = GetSitePath(siteName);
         var version = GetSiteVersion(siteName);
@@ -182,10 +182,10 @@ public class AcumaticaManager
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return await _patchService.ApplyPatchFromArchiveAsync(sitePath, archivePath, version, backupPath);
+        return _patchService.ApplyPatchFromArchive(sitePath, archivePath, version, backupPath);
     }
 
-    public async Task<PatchResult> RollbackPatchAsync(string siteName, string? backupPath = null)
+    public PatchResult RollbackPatch(string siteName, string? backupPath = null)
     {
         var sitePath = GetSitePath(siteName);
         var version = GetSiteVersion(siteName);
@@ -193,12 +193,12 @@ public class AcumaticaManager
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return await _patchService.RollbackPatchAsync(sitePath, version, backupPath);
+        return _patchService.RollbackPatch(sitePath, version, backupPath);
     }
 
-    public async Task<bool> IsPatchToolAvailableAsync(string version)
+    public bool IsPatchToolAvailable(string version)
     {
-        return await _patchService.IsPatchToolAvailableAsync(version);
+        return _patchService.IsPatchToolAvailable(version);
     }
 
     private string GetSitePath(string siteName)

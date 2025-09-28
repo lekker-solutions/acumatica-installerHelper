@@ -32,7 +32,7 @@ public class ConfigurationService : IConfigurationService
                 _cachedConfig = new AcumaticaConfig();
                 
                 // Save default configuration
-                _ = Task.Run(async () => await SaveConfigurationAsync(_cachedConfig));
+                SaveConfiguration(_cachedConfig);
             }
         }
         catch (Exception)
@@ -43,7 +43,7 @@ public class ConfigurationService : IConfigurationService
         return _cachedConfig;
     }
 
-    public async Task SaveConfigurationAsync(AcumaticaConfig config)
+    public void SaveConfiguration(AcumaticaConfig config)
     {
         try
         {
@@ -53,7 +53,7 @@ public class ConfigurationService : IConfigurationService
             };
             
             var jsonContent = JsonSerializer.Serialize(config, options);
-            await File.WriteAllTextAsync(_configFilePath, jsonContent);
+            File.WriteAllText(_configFilePath, jsonContent);
             
             _cachedConfig = config;
         }
@@ -72,7 +72,7 @@ public class ConfigurationService : IConfigurationService
     {
         var config = GetConfiguration();
         config.AcumaticaDirectory = path;
-        _ = Task.Run(async () => await SaveConfigurationAsync(config));
+        SaveConfiguration(config);
     }
 
     public string GetSiteDirectory()
@@ -84,7 +84,7 @@ public class ConfigurationService : IConfigurationService
     {
         var config = GetConfiguration();
         config.SiteDirectory = directory;
-        _ = Task.Run(async () => await SaveConfigurationAsync(config));
+        SaveConfiguration(config);
     }
 
     public string GetVersionDirectory()
@@ -96,7 +96,7 @@ public class ConfigurationService : IConfigurationService
     {
         var config = GetConfiguration();
         config.VersionDirectory = directory;
-        _ = Task.Run(async () => await SaveConfigurationAsync(config));
+        SaveConfiguration(config);
     }
 
     public SiteType GetDefaultSiteType()
@@ -109,7 +109,7 @@ public class ConfigurationService : IConfigurationService
     {
         var config = GetConfiguration();
         config.SiteType = siteType.ToString();
-        _ = Task.Run(async () => await SaveConfigurationAsync(config));
+        SaveConfiguration(config);
     }
 
     public bool GetInstallDebugTools()
@@ -121,7 +121,7 @@ public class ConfigurationService : IConfigurationService
     {
         var config = GetConfiguration();
         config.InstallDebugTools = install;
-        _ = Task.Run(async () => await SaveConfigurationAsync(config));
+        SaveConfiguration(config);
     }
 
     public string GetDefaultSiteInstallPath()

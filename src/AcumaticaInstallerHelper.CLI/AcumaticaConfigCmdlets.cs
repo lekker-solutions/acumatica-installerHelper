@@ -7,19 +7,19 @@ namespace AcumaticaInstallerHelper.CLI
     [OutputType(typeof(object))]
     public class GetAcumaticaConfigCmdlet : AcumaticaBaseCmdlet
     {
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
                 var config = new
                 {
                     AcumaticaDirectory = AcumaticaManager.GetAcumaticaDirectory(),
-                    SiteDirectory      = AcumaticaManager.GetSiteDirectory(),
-                    VersionDirectory   = AcumaticaManager.GetVersionDirectory(),
-                    DefaultSiteType    = AcumaticaManager.GetDefaultSiteType().ToString(),
-                    InstallDebugTools  = AcumaticaManager.GetInstallDebugTools()
+                    SiteDirectory = AcumaticaManager.GetSiteDirectory(),
+                    VersionDirectory = AcumaticaManager.GetVersionDirectory(),
+                    DefaultSiteType = AcumaticaManager.GetDefaultSiteType(),
+                    InstallDebugTools = AcumaticaManager.GetInstallDebugTools()
                 };
-
+                
                 WriteObject(config);
             }
             catch (Exception ex)
@@ -37,7 +37,7 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Path { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
@@ -59,7 +59,7 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Path { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
@@ -81,7 +81,7 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateNotNullOrEmpty]
         public string Path { get; set; } = string.Empty;
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
@@ -103,7 +103,7 @@ namespace AcumaticaInstallerHelper.CLI
         [ValidateSet("Production", "Development")]
         public SiteType SiteType { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {
@@ -124,7 +124,7 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(Mandatory = true, Position = 0, HelpMessage = "Install debug tools by default")]
         public bool InstallDebugTools { get; set; }
 
-        protected override async Task ProcessRecordAsync()
+        protected override void ProcessRecord()
         {
             try
             {

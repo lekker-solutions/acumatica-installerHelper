@@ -4,9 +4,9 @@ namespace AcumaticaInstallerHelper.Services;
 
 public interface IVersionService
 {
-    Task<bool> InstallVersionAsync(string version, bool isPreview = false, bool installDebugTools = false);
-    Task<bool> RemoveVersionAsync(string version);
-    Task<List<AcumaticaVersion>> GetAvailableVersionsAsync(string? majorRelease = null, bool preview = false);
+    bool InstallVersion(string version, bool isPreview = false, bool installDebugTools = false);
+    bool RemoveVersion(string version);
+    List<AcumaticaVersion> GetAvailableVersions(string? majorRelease = null, bool preview = false);
     List<AcumaticaVersion> GetInstalledVersions();
     bool IsVersionInstalled(string version);
     string GetVersionPath(string version);

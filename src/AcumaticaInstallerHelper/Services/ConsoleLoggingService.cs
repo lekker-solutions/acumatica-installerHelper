@@ -125,6 +125,27 @@ public class ConsoleLoggingService : ILoggingService
     public void WriteWarning(string message) => WriteLog(LogLevel.Warning, message);
     public void WriteError(string message) => WriteLog(LogLevel.Error, message);
 
+    public void WriteProgressBar(string message, int percentage)
+    {
+        const int barWidth    = 30;
+        var       filledWidth = (int)(percentage / 100.0 * barWidth);
+        int       emptyWidth  = barWidth - filledWidth;
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("⏳ ");
+        Console.ResetColor();
+
+        Console.Write($"{message} ");
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write(new string('█', filledWidth));
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(new string('░', emptyWidth));
+        Console.ResetColor();
+
+        Console.WriteLine($" {percentage}%");
+    }
+
     private static (string Icon, ConsoleColor Color) GetLogLevelDisplay(LogLevel level)
     {
         return level switch

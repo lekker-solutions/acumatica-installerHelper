@@ -14,14 +14,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup PowerShell 7
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install PowerShell 7
+        run: |
+          winget install --id Microsoft.Powershell --source winget --accept-package-agreements --accept-source-agreements
+        shell: cmd
+
       - name: Test Module Manifest
         run: Test-ModuleManifest -Path .\AcuInstallerHelper\AcuInstallerHelper.psd1
+        shell: pwsh
 
-      - name: Install Pester
-        run: Install-Module -Name Pester -Force -SkipPublisherCheck
-
-      - name: Test
-        run: Invoke-Pester -Path .\tests\ -Recurse
+      - name: Run Tests
+        run: .\RunTests.ps1 -OutputFormat CI
+        shell: pwsh
 
   publish:
     if: github.ref == 'refs/heads/main' # This job only runs when the branch is 'main'

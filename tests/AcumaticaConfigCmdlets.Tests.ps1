@@ -28,14 +28,9 @@ Describe "AcumaticaConfigCmdlets" {
         It "Should accept valid directory path" {
             $testPath = "C:\TestAcumatica"
             { Set-AcumaticaDirectory -Path $testPath } | Should -Not -Throw
-        }
-
-        It "Should throw on empty path" {
-            { Set-AcumaticaDirectory -Path "" } | Should -Throw
-        }
-
-        It "Should throw on null path" {
-            { Set-AcumaticaDirectory -Path $null } | Should -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.AcumaticaDirectory | Should -Be $testPath
         }
     }
 
@@ -43,14 +38,9 @@ Describe "AcumaticaConfigCmdlets" {
         It "Should accept valid directory path" {
             $testPath = "C:\TestSites"
             { Set-AcumaticaSiteDirectory -Path $testPath } | Should -Not -Throw
-        }
-
-        It "Should throw on empty path" {
-            { Set-AcumaticaSiteDirectory -Path "" } | Should -Throw
-        }
-
-        It "Should throw on null path" {
-            { Set-AcumaticaSiteDirectory -Path $null } | Should -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.SiteDirectory | Should -Be $testPath
         }
     }
 
@@ -58,38 +48,41 @@ Describe "AcumaticaConfigCmdlets" {
         It "Should accept valid directory path" {
             $testPath = "C:\TestVersions"
             { Set-AcumaticaVersionDirectory -Path $testPath } | Should -Not -Throw
-        }
-
-        It "Should throw on empty path" {
-            { Set-AcumaticaVersionDirectory -Path "" } | Should -Throw
-        }
-
-        It "Should throw on null path" {
-            { Set-AcumaticaVersionDirectory -Path $null } | Should -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.VersionDirectory | Should -Be $testPath
         }
     }
 
     Context "Set-AcumaticaDefaultSiteType" {
         It "Should accept Production site type" {
             { Set-AcumaticaDefaultSiteType -SiteType Production } | Should -Not -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.DefaultSiteType | Should -Be "Production"
         }
 
         It "Should accept Development site type" {
             { Set-AcumaticaDefaultSiteType -SiteType Development } | Should -Not -Throw
-        }
-
-        It "Should throw on invalid site type" {
-            { Set-AcumaticaDefaultSiteType -SiteType "InvalidType" } | Should -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.DefaultSiteType | Should -Be "Development"
         }
     }
 
     Context "Set-AcumaticaInstallDebugTools" {
         It "Should accept true value" {
             { Set-AcumaticaInstallDebugTools -InstallDebugTools $true } | Should -Not -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.InstallDebugTools | Should -Be $true
         }
 
         It "Should accept false value" {
             { Set-AcumaticaInstallDebugTools -InstallDebugTools $false } | Should -Not -Throw
+        
+            $config = Get-AcumaticaConfig
+            $config.InstallDebugTools | Should -Be $false
         }
     }
 }

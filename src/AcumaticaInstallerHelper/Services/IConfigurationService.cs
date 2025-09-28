@@ -5,7 +5,7 @@ namespace AcumaticaInstallerHelper.Services;
 public interface IConfigurationService
 {
     AcumaticaConfig GetConfiguration();
-    Task SaveConfigurationAsync(AcumaticaConfig config);
+    void SaveConfiguration(AcumaticaConfig config);
     
     string GetAcumaticaDirectory();
     void SetAcumaticaDirectory(string path);

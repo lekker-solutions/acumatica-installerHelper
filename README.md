@@ -8,13 +8,15 @@ The AcuInstallerHelper module simplifies the process of downloading, installing,
 
 ## Requirements
 
-- Windows PowerShell 5.1 or higher
+- **PowerShell 7.0 or higher** (PowerShell Core)
 - Administrator privileges (required for site operations)
 - Internet connection (for downloading installers and patches)
 - SQL Server instance accessible via `(local)` hostname
   - SQL Server must be installed and running
   - Mixed mode or Windows authentication enabled
   - The account running the PowerShell session must have SQL Server permissions to create databases
+
+> **Note**: This module requires PowerShell 7.0 or higher and is not compatible with Windows PowerShell 5.1. To install PowerShell 7, visit [Installing PowerShell on Windows](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows).
 
 ## Installation
 
@@ -275,31 +277,34 @@ Patch operations require the Acumatica patch tool to be available for the specif
 
 The AcuInstallerHelper module includes comprehensive Pester tests to ensure reliability and functionality.
 
-### Prerequisites
-
-You need Pester v5.0 or higher to run the tests:
-
-```powershell
-# Check if Pester is installed
-Get-Module -Name Pester -ListAvailable
-
-# Install Pester if needed (requires PowerShell 5.1+ or PowerShell 7+)
-Install-Module -Name Pester -Force -SkipPublisherCheck
-```
-
 ### Running Tests
 
-To run the tests, navigate to the repository root directory and execute:
+The easiest way to run tests is using the provided test runner script:
 
 ```powershell
-# Run all tests
-Invoke-Pester .\tests\ -Recurse
+# Run all tests (installs Pester automatically if needed)
+.\RunTests.ps1
 
 # Run tests with detailed output
-Invoke-Pester .\tests\ -Recurse -Output Detailed
+.\RunTests.ps1 -OutputFormat Detailed
 
-# Run tests and show results in CI format
-Invoke-Pester .\tests\ -Recurse -CI
+# Run tests in CI format
+.\RunTests.ps1 -OutputFormat CI
+
+# Run tests with minimal output
+.\RunTests.ps1 -OutputFormat Minimal
+```
+
+### Manual Test Execution
+
+If you prefer to run tests manually:
+
+```powershell
+# Install Pester if needed
+Install-Module -Name Pester -Force -SkipPublisherCheck
+
+# Run all tests
+Invoke-Pester .\tests\ -Recurse
 
 # Run specific test file
 Invoke-Pester .\tests\AcumaticaConfigCmdlets.Tests.ps1
