@@ -121,7 +121,7 @@ public class VersionService : IVersionService
 
             _loggingService.WriteSection("Installing Version");
 
-            var success = InstallMsi(tempFile, version);
+            var success = InstallMsi(tempFile, version, installDebugTools);
 
             if (File.Exists(tempFile))
             {
@@ -130,6 +130,8 @@ public class VersionService : IVersionService
             }
 
             if (success)
+            {
+
                 _loggingService.WriteSummary("Version Installation", "Completed Successfully",
                     new Dictionary<string, string>
                     {
@@ -138,6 +140,7 @@ public class VersionService : IVersionService
                         ["Preview"] = isPreview ? "Yes" : "No",
                         ["Debug Tools"] = installDebugTools ? "Yes" : "No"
                     });
+            }
 
             return success;
         }
@@ -248,7 +251,7 @@ public class VersionService : IVersionService
 
                 if (percentageTens > lastReportedPercentage)
                 {
-                    _loggingService.WriteProgressBar("                    ", percentageTens);
+                    _loggingService.WriteProgressBar("                               ", percentageTens);
                     lastReportedPercentage = percentageTens;
                 }
             }
@@ -258,12 +261,17 @@ public class VersionService : IVersionService
         return tempFile;
     }
 
-    private bool InstallMsi(string msiPath, string version)
+    private bool InstallMsi(string msiPath, string version, bool installDebugTools = true)
     {
         var installPath = GetVersionPath(version);
         Directory.CreateDirectory(installPath);
 
-        var arguments = $"/a \"{msiPath}\" /qb TARGETDIR=\"{installPath}\"";
+        string features = string.Empty;
+        if (installDebugTools)
+        {
+            features = "ADDLOCAL=DEBUGGERTOOLS";
+        }
+        var arguments = $"/a \"{msiPath}\" {features} /qb TARGETDIR=\"{installPath}\"";
 
         _loggingService.WriteProgress("Running MSI installer...");
         _loggingService.WriteDebug($"MSI install arguments: {arguments}");
@@ -300,6 +308,27 @@ public class VersionService : IVersionService
 
         if (process.ExitCode == 0)
         {
+            // Delete all MSI files
+            foreach (var msiFile in Directory.GetFiles(installPath, "*.msi"))
+            {
+                File.Delete(msiFile);
+            }
+
+            // Move files from Acumatica ERP directory to installPath
+            var acumaticaDir = Path.Combine(installPath, "Acumatica ERP");
+            if (Directory.Exists(acumaticaDir))
+            {
+                foreach (var file in Directory.GetFiles(acumaticaDir, "*", SearchOption.AllDirectories))
+                {
+                    var relativePath = Path.GetRelativePath(acumaticaDir, file);
+                    var destinationPath = Path.Combine(installPath, relativePath);
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                    File.Move(file, destinationPath);
+                }
+
+                Directory.Delete(acumaticaDir, true);
+            }
+
             _loggingService.WriteSuccess("MSI installation completed successfully");
             return true;
         }

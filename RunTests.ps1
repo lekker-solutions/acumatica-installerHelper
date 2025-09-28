@@ -66,8 +66,16 @@ if (-not (Test-Path ".\tests")) {
     exit 1
 }
 
+Write-Host "Building Module" -ForegroundColor Yellow
+Write-Host
+dotnet build -c Release
 Remove-Module AcuInstallerHelper -ErrorAction SilentlyContinue
 Import-Module .\AcuInstallerHelper -Verbose
+
+Write-Host
+Write-Host
+Write-Host "Module Built, running Tests" -ForegroundColor Green
+Write-Host
 
 # Define test execution order
 $testOrder = @(
