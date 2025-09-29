@@ -5,35 +5,66 @@ namespace AcumaticaInstallerHelper;
 
 public class AcumaticaManager
 {
-    private readonly IVersionService _versionService;
-    private readonly ISiteService _siteService;
+    private readonly IVersionService       _versionService;
+    private readonly ISiteService          _siteService;
     private readonly IConfigurationService _configService;
-    private readonly ILoggingService _loggingService;
-    private readonly IPatchService _patchService;
+    private readonly ILoggingService       _loggingService;
+    private readonly IPatchService         _patchService;
+    private readonly ISiteRegistryService  _siteRegistryService;
 
     public AcumaticaManager(
-        IVersionService versionService,
-        ISiteService siteService,
+        IVersionService       versionService,
+        ISiteService          siteService,
         IConfigurationService configService,
-        ILoggingService loggingService,
-        IPatchService patchService)
+        ILoggingService       loggingService,
+        IPatchService         patchService,
+        ISiteRegistryService  siteRegistryService)
     {
-        _versionService = versionService;
-        _siteService = siteService;
-        _configService = configService;
-        _loggingService = loggingService;
-        _patchService = patchService;
+        _versionService      = versionService;
+        _siteService         = siteService;
+        _configService       = configService;
+        _loggingService      = loggingService;
+        _patchService        = patchService;
+        _siteRegistryService = siteRegistryService;
     }
 
     // Version Management
-    public bool InstallVersion(string version, bool isPreview = false, bool installDebugTools = false)
+    public bool InstallVersion(AcumaticaVersion version)
     {
-        return _versionService.InstallVersion(version, isPreview, installDebugTools);
+        var versionPath = Path.Combine(
+            _configService.GetAcumaticaDirectory(),
+            _configService.GetVersionDirectory(),
+            version.MinorVersion
+        );
+        
+        var config = new VersionConfiguration
+        {
+            Version = version,
+            VersionPath = versionPath,
+            InstallDebugTools = _configService.GetInstallDebugTools(),
+            ForceInstall = version.InstallNewVersion
+        };
+        
+        return _versionService.InstallVersion(config);
     }
 
-    public bool RemoveVersion(string version)
+    public bool RemoveVersion(AcumaticaVersion version)
     {
-        return _versionService.RemoveVersion(version);
+        var versionPath = Path.Combine(
+            _configService.GetAcumaticaDirectory(),
+            _configService.GetVersionDirectory(),
+            version.MinorVersion
+        );
+        
+        var config = new VersionConfiguration
+        {
+            Version = version,
+            VersionPath = versionPath,
+            InstallDebugTools = false,
+            ForceInstall = false
+        };
+        
+        return _versionService.RemoveVersion(config);
     }
 
     public List<AcumaticaVersion> GetInstalledVersions()
@@ -46,47 +77,76 @@ public class AcumaticaManager
         return _versionService.GetAvailableVersions(majorRelease, preview);
     }
 
-    public bool IsVersionInstalled(string version)
+    public bool IsVersionInstalled(AcumaticaVersion version)
     {
         return _versionService.IsVersionInstalled(version);
     }
 
     // Site Management
-    public bool CreateSite(string version, string siteName, string? siteInstallPath = null, SiteInstallOptions? options = null)
+    public bool CreateSite(SiteConfiguration siteConfig)
     {
-        options ??= new SiteInstallOptions();
-        
-        var siteConfig = new SiteConfiguration
-        {
-            Version = version,
-            SiteName = siteName,
-            InstallPath = siteInstallPath ?? string.Empty,
-            IsPortal = options.Portal,
-            SiteType = options.SiteType ?? _configService.GetDefaultSiteType(),
-            IsPreview = options.Preview
-        };
+        // Set defaults if not provided
+        if (siteConfig.SiteType == SiteType.NotSet)
+            siteConfig = siteConfig with { SiteType = _configService.GetDefaultSiteType() };
 
-        return _siteService.CreateSite(siteConfig, options);
+        if (string.IsNullOrEmpty(siteConfig.SitePath))
+        {
+            string sitePath = Path.Combine(
+                _configService.GetAcumaticaDirectory(),
+                _configService.GetSiteDirectory(),
+                siteConfig.SiteName
+            );
+            siteConfig = siteConfig with { SitePath = sitePath };
+        }
+
+        return _siteService.CreateSite(siteConfig);
     }
 
     public bool RemoveSite(string siteName)
     {
-        return _siteService.RemoveSite(siteName);
+        string sitePath = _siteRegistryService.GetSitePath(siteName) ?? Path.Combine(
+            _configService.GetAcumaticaDirectory(),
+            _configService.GetSiteDirectory(),
+            siteName
+        );
+
+        return _siteService.RemoveSite(new SiteConfiguration
+        {
+            Action   = SiteAction.DeleteSite,
+            SiteName = siteName,
+            SitePath = sitePath,
+            Version  = new AcumaticaVersion()
+        });
     }
 
     public bool UpdateSite(string siteName, string newVersion)
     {
-        return _siteService.UpdateSite(siteName, newVersion);
+        string sitePath = _siteRegistryService.GetSitePath(siteName) ?? Path.Combine(
+            _configService.GetAcumaticaDirectory(),
+            _configService.GetSiteDirectory(),
+            siteName
+        );
+
+        return _siteService.UpdateSite(new SiteConfiguration
+        {
+            Action   = SiteAction.UpgradeSite,
+            SiteName = siteName,
+            SitePath = sitePath,
+            Version = new AcumaticaVersion
+            {
+                Version = newVersion
+            }
+        });
     }
 
     public List<string> GetInstalledSites()
     {
-        return _siteService.GetInstalledSites();
+        return _siteRegistryService.GetInstalledSites();
     }
 
     public string? GetSiteVersion(string siteName)
     {
-        return _siteService.GetSiteVersion(siteName);
+        return _siteRegistryService.GetSiteVersion(siteName);
     }
 
     // Configuration Management
@@ -140,12 +200,6 @@ public class AcumaticaManager
         _configService.SetInstallDebugTools(install);
     }
 
-    // Utility Methods
-    public void ValidateVersionFormat(string version)
-    {
-        _versionService.ValidateVersionFormat(version);
-    }
-
     public bool RequiresAdministratorPrivileges()
     {
         return _siteService.RequiresAdministratorPrivileges();
@@ -154,55 +208,103 @@ public class AcumaticaManager
     // Patch Management
     public PatchCheckResult CheckForPatches(string siteName)
     {
-        var sitePath = GetSitePath(siteName);
+        string? sitePath = _siteRegistryService.GetSitePath(siteName);
+        if (string.IsNullOrEmpty(sitePath))
+            throw new InvalidOperationException($"Could not find site path for: {siteName}");
+
         var version = GetSiteVersion(siteName);
         if (string.IsNullOrEmpty(version))
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return _patchService.CheckForPatches(sitePath, version);
+
+        PatchConfiguration patchConfig = new()
+        {
+            Action   = PatchAction.Check,
+            SiteName = siteName,
+            SitePath = sitePath,
+            Version  = new AcumaticaVersion { Version = version }
+        };
+
+        return _patchService.CheckForPatches(patchConfig);
     }
 
     public PatchResult ApplyPatch(string siteName, string? backupPath = null)
     {
-        var sitePath = GetSitePath(siteName);
+        string? sitePath = _siteRegistryService.GetSitePath(siteName);
+        if (string.IsNullOrEmpty(sitePath))
+            throw new InvalidOperationException($"Could not find site path for: {siteName}");
+
         var version = GetSiteVersion(siteName);
         if (string.IsNullOrEmpty(version))
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return _patchService.ApplyPatch(sitePath, version, backupPath);
+
+        PatchConfiguration patchConfig = new()
+        {
+            Action     = PatchAction.Patch,
+            SiteName   = siteName,
+            SitePath   = sitePath,
+            Version    = new AcumaticaVersion { Version = version },
+            BackupPath = backupPath
+        };
+
+        return _patchService.ApplyPatch(patchConfig, backupPath);
     }
 
     public PatchResult ApplyPatchFromArchive(string siteName, string archivePath, string? backupPath = null)
     {
-        var sitePath = GetSitePath(siteName);
+        string? sitePath = _siteRegistryService.GetSitePath(siteName);
+        if (string.IsNullOrEmpty(sitePath))
+            throw new InvalidOperationException($"Could not find site path for: {siteName}");
+
         var version = GetSiteVersion(siteName);
         if (string.IsNullOrEmpty(version))
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return _patchService.ApplyPatchFromArchive(sitePath, archivePath, version, backupPath);
+
+        PatchConfiguration patchConfig = new()
+        {
+            Action      = PatchAction.Patch,
+            SiteName    = siteName,
+            SitePath    = sitePath,
+            Version     = new AcumaticaVersion { Version = version },
+            BackupPath  = backupPath,
+            ArchivePath = archivePath
+        };
+
+        return _patchService.ApplyPatchFromArchive(patchConfig, archivePath, backupPath);
     }
 
     public PatchResult RollbackPatch(string siteName, string? backupPath = null)
     {
-        var sitePath = GetSitePath(siteName);
+        string? sitePath = _siteRegistryService.GetSitePath(siteName);
+        if (string.IsNullOrEmpty(sitePath))
+            throw new InvalidOperationException($"Could not find site path for: {siteName}");
+
         var version = GetSiteVersion(siteName);
         if (string.IsNullOrEmpty(version))
         {
             throw new InvalidOperationException($"Could not determine version for site: {siteName}");
         }
-        return _patchService.RollbackPatch(sitePath, version, backupPath);
+
+        PatchConfiguration patchConfig = new()
+        {
+            Action     = PatchAction.Rollback,
+            SiteName   = siteName,
+            SitePath   = sitePath,
+            Version    = new AcumaticaVersion { Version = version },
+            BackupPath = backupPath
+        };
+
+        return _patchService.RollbackPatch(patchConfig, backupPath);
     }
 
     public bool IsPatchToolAvailable(string version)
     {
-        return _patchService.IsPatchToolAvailable(version);
-    }
-
-    private string GetSitePath(string siteName)
-    {
-        return Path.Combine(_configService.GetSiteDirectory(), siteName);
+        AcumaticaVersion acumaticaVersion = new() { Version = version };
+        return _patchService.IsPatchToolAvailable(acumaticaVersion);
     }
 }

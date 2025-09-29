@@ -5,8 +5,8 @@ namespace AcumaticaInstallerHelper.Services;
 
 public class ConfigurationService : IConfigurationService
 {
-    private readonly string _configFilePath;
-    private AcumaticaConfig? _cachedConfig;
+    private readonly string               _configFilePath;
+    private          ModuleConfiguration? _cachedConfig;
 
     public ConfigurationService()
     {
@@ -15,7 +15,7 @@ public class ConfigurationService : IConfigurationService
         _configFilePath = Path.Combine(assemblyDirectory, "AcuInstallerHelper_config.json");
     }
 
-    public AcumaticaConfig GetConfiguration()
+    public ModuleConfiguration GetConfiguration()
     {
         if (_cachedConfig != null)
             return _cachedConfig;
@@ -25,25 +25,26 @@ public class ConfigurationService : IConfigurationService
             if (File.Exists(_configFilePath))
             {
                 var jsonContent = File.ReadAllText(_configFilePath);
-                _cachedConfig = JsonSerializer.Deserialize<AcumaticaConfig>(jsonContent) ?? new AcumaticaConfig();
+                _cachedConfig = JsonSerializer.Deserialize<ModuleConfiguration>(jsonContent) ??
+                                new ModuleConfiguration();
             }
             else
             {
-                _cachedConfig = new AcumaticaConfig();
-                
+                _cachedConfig = new ModuleConfiguration();
+
                 // Save default configuration
                 SaveConfiguration(_cachedConfig);
             }
         }
         catch (Exception)
         {
-            _cachedConfig = new AcumaticaConfig();
+            _cachedConfig = new ModuleConfiguration();
         }
 
         return _cachedConfig;
     }
 
-    public void SaveConfiguration(AcumaticaConfig config)
+    public void SaveConfiguration(ModuleConfiguration config)
     {
         try
         {
@@ -102,13 +103,13 @@ public class ConfigurationService : IConfigurationService
     public SiteType GetDefaultSiteType()
     {
         var config = GetConfiguration();
-        return Enum.TryParse<SiteType>(config.SiteType, out var siteType) ? siteType : Models.SiteType.Production;
+        return config.DefaultSiteType;
     }
 
     public void SetDefaultSiteType(SiteType siteType)
     {
         var config = GetConfiguration();
-        config.SiteType = siteType.ToString();
+        config.DefaultSiteType = siteType;
         SaveConfiguration(config);
     }
 

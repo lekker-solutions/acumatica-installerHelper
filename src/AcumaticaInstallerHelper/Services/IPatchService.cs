@@ -1,13 +1,15 @@
+using AcumaticaInstallerHelper.Models;
+
 namespace AcumaticaInstallerHelper.Services;
 
 public interface IPatchService
 {
-    string GetPatchToolPath(string version);
-    bool IsPatchToolAvailable(string version);
-    PatchCheckResult CheckForPatches(string sitePath, string version);
-    PatchResult ApplyPatch(string sitePath, string version, string? backupPath = null);
-    PatchResult ApplyPatchFromArchive(string sitePath, string archivePath, string version, string? backupPath = null);
-    PatchResult RollbackPatch(string sitePath, string version, string? backupPath = null);
+    string GetPatchToolPath(AcumaticaVersion version);
+    bool IsPatchToolAvailable(AcumaticaVersion version);
+    PatchCheckResult CheckForPatches(PatchConfiguration config);
+    PatchResult ApplyPatch(PatchConfiguration config, string? backupPath = null);
+    PatchResult ApplyPatchFromArchive(PatchConfiguration config, string archivePath, string? backupPath = null);
+    PatchResult RollbackPatch(PatchConfiguration config, string? backupPath = null);
 }
 
 public class PatchCheckResult

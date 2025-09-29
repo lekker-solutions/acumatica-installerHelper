@@ -12,13 +12,18 @@ Describe "AcumaticaVersionCmdlets" {
             { Install-AcumaticaVersion -Version $null } | Should -Throw
         }
 
-        It "Should accept valid version format" {
-            # This may throw due to network/installation issues, but parameter validation should pass
+        It "Should accept valid version format without parameter validation errors" {
+            $scriptBlock = { Install-AcumaticaVersion -Version "24.215.0011" -ErrorAction Stop }
+            
             try {
-                Install-AcumaticaVersion -Version "24.215.0011"
-            }
-            catch {
-                # Expected if installation fails
+                $result = & $scriptBlock
+                # If successful, should return boolean
+                $result | Should -BeOfType [bool]
+            } catch {
+                # Should not be a parameter validation error
+                $_.Exception.Message | Should -Not -BeLike "*parameter*"
+                $_.Exception.Message | Should -Not -BeLike "*mandatory*"
+                $_.Exception.Message | Should -Not -BeLike "*Cannot bind*"
             }
         }
 
@@ -73,23 +78,40 @@ Describe "AcumaticaVersionCmdlets" {
     Context "Get-AcumaticaVersion" {
         It "Should return installed versions by default" {
             $versions = Get-AcumaticaVersion
-            # Versions can be single item, array, or null
-            if ($versions -ne $null) {
-                # Should be AcumaticaVersion objects or array of them
-                $versions | Should -Not -BeNullOrEmpty
+            
+            # Versions can be null if none installed, otherwise should be AcumaticaVersion objects
+            if ($null -ne $versions) {
+                $versionArray = @($versions)
+                
+                $versionArray | ForEach-Object {
+                    $_ | Should -Not -BeNullOrEmpty
+                    # Should have version properties
+                    $_.PSObject.Properties.Name | Should -Contain "MinorVersion"
+                    $_.PSObject.Properties.Name | Should -Contain "MajorVersion"
+                }
+            } else {
+                # Null is acceptable if no versions installed
+                $versions | Should -BeNullOrEmpty
             }
         }
 
         It "Should accept Available switch" {
-            # This may throw due to network issues, but parameter validation should pass
+            # Should not throw parameter validation errors
+            $scriptBlock = { Get-AcumaticaVersion -Available -ErrorAction Stop }
+            
             try {
-                $versions = Get-AcumaticaVersion -Available
-                if ($versions -ne $null) {
-                    $versions | Should -Not -BeNullOrEmpty
+                $versions = & $scriptBlock
+                if ($null -ne $versions) {
+                    $versionArray = @($versions)
+                    $versionArray | ForEach-Object {
+                        $_ | Should -Not -BeNullOrEmpty
+                        $_.PSObject.Properties.Name | Should -Contain "MinorVersion"
+                    }
                 }
-            }
-            catch {
-                # Expected if network request fails
+            } catch {
+                # Network errors are acceptable, but not parameter validation errors
+                $_.Exception.Message | Should -Not -BeLike "*parameter*"
+                $_.Exception.Message | Should -Not -BeLike "*mandatory*"
             }
         }
 
@@ -129,11 +151,17 @@ Describe "AcumaticaVersionCmdlets" {
             }
         }
 
-        It "Should return installed versions when not using Available switch" {
-            $versions = Get-AcumaticaVersion
-            # Should not throw - versions can be null if none are installed
-            # Just verify the command doesn't error
+        It "Should not throw when getting installed versions" {
+            # Should never throw when getting installed versions
             { Get-AcumaticaVersion } | Should -Not -Throw
+            
+            # Verify we can capture the result
+            $versions = Get-AcumaticaVersion
+            
+            # Result should be null or collection of versions
+            if ($null -ne $versions) {
+                $versions.GetType().Name | Should -BeIn @('Object[]', 'PSCustomObject', 'AcumaticaVersion', 'ArrayList')
+            }
         }
     }
 }

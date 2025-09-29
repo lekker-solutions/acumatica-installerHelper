@@ -16,12 +16,17 @@ Describe "AcumaticaPatchCmdlets" {
             { Test-AcumaticaPatch -SiteName $null } | Should -Throw
         }
 
-        It "Should accept valid site name" {
-            # This may throw due to site not existing, but parameter validation should pass
+        It "Should accept valid site name without throwing parameter validation error" {
+            # Parameter validation should pass even if site doesn't exist
+            $scriptBlock = { Test-AcumaticaPatch -SiteName "TestSite" -ErrorAction Stop }
+            
+            # Should either succeed or throw a specific error about site not found, not parameter validation
             try {
-                Test-AcumaticaPatch -SiteName "TestSite"
+                $result = & $scriptBlock
+                $result | Should -BeOfType [PSCustomObject]
             } catch {
-                # Expected if site doesn't exist
+                $_.Exception.Message | Should -Not -BeLike "*parameter*"
+                $_.Exception.Message | Should -Not -BeLike "*mandatory*"
             }
         }
     }
@@ -39,20 +44,30 @@ Describe "AcumaticaPatchCmdlets" {
             { Install-AcumaticaPatch -SiteName $null } | Should -Throw
         }
 
-        It "Should accept valid site name" {
-            # This may throw due to site not existing, but parameter validation should pass
+        It "Should accept valid site name without throwing parameter validation error" {
+            # Parameter validation should pass even if site doesn't exist
+            $scriptBlock = { Install-AcumaticaPatch -SiteName "TestSite" -ErrorAction Stop }
+            
+            # Should either succeed or throw a specific error about site not found, not parameter validation
             try {
-                Install-AcumaticaPatch -SiteName "TestSite"
+                $result = & $scriptBlock
+                $result | Should -BeOfType [PSCustomObject]
             } catch {
-                # Expected if site doesn't exist
+                $_.Exception.Message | Should -Not -BeLike "*parameter*"
+                $_.Exception.Message | Should -Not -BeLike "*mandatory*"
             }
         }
 
         It "Should accept BackupPath parameter" {
+            $scriptBlock = { Install-AcumaticaPatch -SiteName "TestSite" -BackupPath "C:\Backup\test.zip" -ErrorAction Stop }
+            
             try {
-                Install-AcumaticaPatch -SiteName "TestSite" -BackupPath "C:\Backup\test.zip"
+                $result = & $scriptBlock
+                $result | Should -BeOfType [PSCustomObject]
             } catch {
-                # Expected if site doesn't exist
+                # Should not be a parameter validation error
+                $_.Exception.Message | Should -Not -BeLike "*parameter*"
+                $_.Exception.Message | Should -Not -BeLike "*mandatory*"
             }
         }
 
@@ -109,13 +124,14 @@ Describe "AcumaticaPatchCmdlets" {
             { Test-AcumaticaPatchTool -Version $null } | Should -Throw
         }
 
-        It "Should accept valid version format" {
-            # This may return false if version isn't installed, but parameter validation should pass
-            try {
-                $result = Test-AcumaticaPatchTool -Version "24.215.0011"
-                $result | Should -BeOfType [bool]
-            } catch {
-                # Expected if version doesn't exist
+        It "Should accept valid version format and return boolean" {
+            # Should always return a boolean, even if version isn't installed
+            $result = Test-AcumaticaPatchTool -Version "24.215.0011" -ErrorAction SilentlyContinue
+            $result | Should -BeOfType [bool]
+            
+            # If version doesn't exist, should return false, not throw
+            if ($null -ne $result) {
+                $result | Should -BeIn @($true, $false)
             }
         }
     }

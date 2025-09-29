@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using AcumaticaInstallerHelper.Models;
 
 namespace AcumaticaInstallerHelper.Services;
 
@@ -19,30 +20,30 @@ public class PatchService : IPatchService
         _loggingService = loggingService;
     }
 
-    public string GetPatchToolPath(string version)
+    public string GetPatchToolPath(AcumaticaVersion version)
     {
-        if (!IsPatchingSupportedForVersion(version))
+        if (!IsPatchingSupportedForVersion(version.MinorVersion))
         {
-            _loggingService.WriteError($"Patching is not supported for version {version}. Patching is only available for version 25R1 (25.100) and later.");
-            throw new NotSupportedException($"Patching is not supported for version {version}. Patching is only available for version 25R1 (25.100) and later.");
+            _loggingService.WriteError($"Patching is not supported for version {version.MinorVersion}. Patching is only available for version 25R1 (25.100) and later.");
+            throw new NotSupportedException($"Patching is not supported for version {version.MinorVersion}. Patching is only available for version 25R1 (25.100) and later.");
         }
 
         var patchToolPath = _versionService.GetPatchUtilityPath(version);
         
         if (!File.Exists(patchToolPath))
         {
-            _loggingService.WriteError($"PatchTool not found at {patchToolPath}. Ensure version {version} is installed.");
-            throw new FileNotFoundException($"PatchTool not found for version {version}", patchToolPath);
+            _loggingService.WriteError($"PatchTool not found at {patchToolPath}. Ensure version {version.MinorVersion} is installed.");
+            throw new FileNotFoundException($"PatchTool not found for version {version.MinorVersion}", patchToolPath);
         }
 
         return patchToolPath;
     }
 
-    public bool IsPatchToolAvailable(string version)
+    public bool IsPatchToolAvailable(AcumaticaVersion version)
     {
         try
         {
-            if (!IsPatchingSupportedForVersion(version))
+            if (!IsPatchingSupportedForVersion(version.MinorVersion))
             {
                 return false;
             }
@@ -52,27 +53,28 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to check patch tool availability for version {version}: {ex.Message}");
+            _loggingService.WriteError($"Failed to check patch tool availability for version {version.MinorVersion}: {ex.Message}");
             return false;
         }
     }
 
-    public PatchCheckResult CheckForPatches(string sitePath, string version)
+    public PatchCheckResult CheckForPatches(PatchConfiguration config)
     {
-        _loggingService.WriteDebug($"Checking for patches at site path: {sitePath} using version {version}");
+        _loggingService.WriteDebug($"Checking for patches at site: {config.SiteName} using version {config.Version.MinorVersion}");
 
-        if (!IsPatchingSupportedForVersion(version))
+        if (!IsPatchingSupportedForVersion(config.Version.MinorVersion))
         {
             return new PatchCheckResult
             {
                 HasPatch = false,
-                Message = $"Patching is not supported for version {version}. Patching is only available for version 25R1 (25.100) and later."
+                Message = $"Patching is not supported for version {config.Version.MinorVersion}. Patching is only available for version 25R1 (25.100) and later."
             };
         }
 
         try
         {
-            var patchToolPath = GetPatchToolPath(version);
+            var patchToolPath = GetPatchToolPath(config.Version);
+            var sitePath = config.SitePath;
             var arguments = $"check --path \"{sitePath}\"";
 
             var output = ExecutePatchTool(patchToolPath, arguments);
@@ -97,7 +99,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to check for patches at {sitePath}: {ex.Message}");
+            _loggingService.WriteError($"Failed to check for patches at {config.SiteName}: {ex.Message}");
             return new PatchCheckResult
             {
                 HasPatch = false,
@@ -106,22 +108,23 @@ public class PatchService : IPatchService
         }
     }
 
-    public PatchResult ApplyPatch(string sitePath, string version, string? backupPath = null)
+    public PatchResult ApplyPatch(PatchConfiguration config, string? backupPath = null)
     {
-        _loggingService.WriteDebug($"Applying patch at site path: {sitePath} using version {version}");
+        _loggingService.WriteDebug($"Applying patch at site: {config.SiteName} using version {config.Version.MinorVersion}");
 
-        if (!IsPatchingSupportedForVersion(version))
+        if (!IsPatchingSupportedForVersion(config.Version.MinorVersion))
         {
             return new PatchResult
             {
                 Success = false,
-                Message = $"Patching is not supported for version {version}. Patching is only available for version 25R1 (25.100) and later."
+                Message = $"Patching is not supported for version {config.Version.MinorVersion}. Patching is only available for version 25R1 (25.100) and later."
             };
         }
 
         try
         {
-            var patchToolPath = GetPatchToolPath(version);
+            var patchToolPath = GetPatchToolPath(config.Version);
+            var sitePath = config.SitePath;
             var arguments = $"patch --path \"{sitePath}\"";
             
             if (!string.IsNullOrEmpty(backupPath))
@@ -160,7 +163,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to apply patch at {sitePath}: {ex.Message}");
+            _loggingService.WriteError($"Failed to apply patch at {config.SiteName}: {ex.Message}");
             return new PatchResult
             {
                 Success = false,
@@ -169,22 +172,23 @@ public class PatchService : IPatchService
         }
     }
 
-    public PatchResult ApplyPatchFromArchive(string sitePath, string archivePath, string version, string? backupPath = null)
+    public PatchResult ApplyPatchFromArchive(PatchConfiguration config, string archivePath, string? backupPath = null)
     {
-        _loggingService.WriteDebug($"Applying patch from archive {archivePath} at site path: {sitePath} using version {version}");
+        _loggingService.WriteDebug($"Applying patch from archive {archivePath} at site: {config.SiteName} using version {config.Version.MinorVersion}");
 
-        if (!IsPatchingSupportedForVersion(version))
+        if (!IsPatchingSupportedForVersion(config.Version.MinorVersion))
         {
             return new PatchResult
             {
                 Success = false,
-                Message = $"Patching is not supported for version {version}. Patching is only available for version 25R1 (25.100) and later."
+                Message = $"Patching is not supported for version {config.Version.MinorVersion}. Patching is only available for version 25R1 (25.100) and later."
             };
         }
 
         try
         {
-            var patchToolPath = GetPatchToolPath(version);
+            var patchToolPath = GetPatchToolPath(config.Version);
+            var sitePath = config.SitePath;
             var arguments = $"patch --path \"{sitePath}\" --archive \"{archivePath}\"";
             
             if (!string.IsNullOrEmpty(backupPath))
@@ -214,7 +218,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to apply patch from archive {archivePath} at {sitePath}: {ex.Message}");
+            _loggingService.WriteError($"Failed to apply patch from archive {archivePath} at {config.SiteName}: {ex.Message}");
             return new PatchResult
             {
                 Success = false,
@@ -223,22 +227,23 @@ public class PatchService : IPatchService
         }
     }
 
-    public PatchResult RollbackPatch(string sitePath, string version, string? backupPath = null)
+    public PatchResult RollbackPatch(PatchConfiguration config, string? backupPath = null)
     {
-        _loggingService.WriteDebug($"Rolling back patch at site path: {sitePath} using version {version}");
+        _loggingService.WriteDebug($"Rolling back patch at site: {config.SiteName} using version {config.Version.MinorVersion}");
 
-        if (!IsPatchingSupportedForVersion(version))
+        if (!IsPatchingSupportedForVersion(config.Version.MinorVersion))
         {
             return new PatchResult
             {
                 Success = false,
-                Message = $"Patching is not supported for version {version}. Patching is only available for version 25R1 (25.100) and later."
+                Message = $"Patching is not supported for version {config.Version.MinorVersion}. Patching is only available for version 25R1 (25.100) and later."
             };
         }
 
         try
         {
-            var patchToolPath = GetPatchToolPath(version);
+            var patchToolPath = GetPatchToolPath(config.Version);
+            var sitePath = config.SitePath;
             var arguments = $"rollback --path \"{sitePath}\"";
             
             if (!string.IsNullOrEmpty(backupPath))
@@ -274,7 +279,7 @@ public class PatchService : IPatchService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to rollback patch at {sitePath}: {ex.Message}");
+            _loggingService.WriteError($"Failed to rollback patch at {config.SiteName}: {ex.Message}");
             return new PatchResult
             {
                 Success = false,

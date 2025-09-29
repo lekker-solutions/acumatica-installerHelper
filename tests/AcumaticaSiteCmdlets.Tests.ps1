@@ -12,13 +12,18 @@ Describe "AcumaticaSiteCmdlets" {
             { New-AcumaticaSite -Version "24.215.0011" -Name "" } | Should -Throw
         }
 
-        It "Should accept valid parameters" {
-            # This may throw due to version not existing, but parameter validation should pass
+        It "Should accept valid parameters without parameter validation errors" {
+            $scriptBlock = { New-AcumaticaSite -Version "24.215.0011" -Name "TestSite" -ErrorAction Stop }
+            
             try {
-                New-AcumaticaSite -Version "24.215.0011" -Name "TestSite"
-            }
-            catch {
-                # Expected if version doesn't exist
+                $result = & $scriptBlock
+                # If successful, should return boolean
+                $result | Should -BeOfType [bool]
+            } catch {
+                # Should not be a parameter validation error
+                $_.Exception.Message | Should -Not -BeLike "*parameter*"
+                $_.Exception.Message | Should -Not -BeLike "*mandatory*"
+                $_.Exception.Message | Should -Not -BeLike "*Cannot bind*"
             }
         }
 
@@ -100,32 +105,41 @@ Describe "AcumaticaSiteCmdlets" {
     Context "Get-AcumaticaSite" {
         It "Should return site list without parameters" {
             $sites = Get-AcumaticaSite
-            # Sites can be single item, array, or null
-            if ($sites -ne $null) {
-                if ($sites -is [array] -or $sites -is [string]) {
-                    # Test passes if it's array or string (single site)
+            
+            # Should either return null (no sites), string (single site), or array (multiple sites)
+            if ($null -ne $sites) {
+                if ($sites -is [array]) {
+                    $sites | ForEach-Object { $_ | Should -BeOfType [string] }
+                } else {
+                    $sites | Should -BeOfType [string]
                 }
-                else {
-                    throw "Unexpected type: $($sites.GetType())"
-                }
+            } else {
+                # Null is acceptable if no sites are installed
+                $sites | Should -BeNullOrEmpty
             }
         }
 
-        It "Should accept IncludeVersion switch" {
+        It "Should accept IncludeVersion switch and return objects with Name and Version properties" {
             $sites = Get-AcumaticaSite -IncludeVersion
-            # Sites can be single item, array, or null
-            if ($sites -ne $null) {
-                if ($sites -is [array]) {
-                    if ($sites.Count -gt 0) {
-                        $sites[0].PSObject.Properties.Name | Should -Contain "Name"
-                        $sites[0].PSObject.Properties.Name | Should -Contain "Version"
+            
+            if ($null -ne $sites) {
+                # Convert to array if single item
+                $siteArray = @($sites)
+                
+                $siteArray | ForEach-Object {
+                    $_ | Should -Not -BeNullOrEmpty
+                    $_.PSObject.Properties.Name | Should -Contain "Name"
+                    $_.PSObject.Properties.Name | Should -Contain "Version"
+                    
+                    # Verify property types
+                    $_.Name | Should -BeOfType [string]
+                    if ($null -ne $_.Version) {
+                        $_.Version | Should -BeOfType [string]
                     }
                 }
-                elseif ($sites.PSObject.Properties.Name -contains "Name") {
-                    # Single object with Name and Version properties
-                    $sites.PSObject.Properties.Name | Should -Contain "Name"
-                    $sites.PSObject.Properties.Name | Should -Contain "Version"
-                }
+            } else {
+                # Null is acceptable if no sites are installed
+                $sites | Should -BeNullOrEmpty
             }
         }
     }
