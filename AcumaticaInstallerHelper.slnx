@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/info/">
+    <File Path=".gitignore" />
     <File Path="AcuInstallerHelper/AcuInstallerHelper_config.json" />
   </Folder>
   <Project Path="src/AcumaticaInstallerHelper.CLI/AcumaticaInstallerHelper.CLI.csproj" />

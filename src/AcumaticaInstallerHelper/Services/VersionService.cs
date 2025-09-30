@@ -221,7 +221,7 @@ public class VersionService : IVersionService
 
                 if (percentageTens > lastReportedPercentage)
                 {
-                    _loggingService.WriteProgressBar("                               ", percentageTens);
+                    _loggingService.WriteProgressBar("                   ", percentageTens);
                     lastReportedPercentage = percentageTens;
                 }
             }
