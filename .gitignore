@@ -8,3 +8,4 @@ tests/*/obj
 .vs/
 AcuInstallerHelper/*.dll
 AcuInstallerHelper/*.pdb
+/AcuInstallerHelper/AcuInstallerHelper_config.json
