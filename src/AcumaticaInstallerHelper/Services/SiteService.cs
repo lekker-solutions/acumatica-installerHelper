@@ -52,11 +52,11 @@ public class SiteService : ISiteService
             // Check if version exists
             if (!_versionService.IsVersionInstalled(siteConfig.Version))
             {
-                _loggingService.WriteWarning($"Version {siteConfig.Version} not found locally");
+                _loggingService.WriteWarning($"Version {siteConfig.Version.MinorVersion} not found locally");
 
                 bool shouldInstall = siteConfig.Version.InstallNewVersion ||
                                      _loggingService.PromptYesNo(
-                                         $"You do not have version {siteConfig.Version} installed, do you want to install?");
+                                         $"You do not have version {siteConfig.Version.MinorVersion} installed, do you want to install?");
 
                 if (!shouldInstall)
                 {
@@ -66,8 +66,20 @@ public class SiteService : ISiteService
 
                 _loggingService.WriteSection("Installing Required Version");
 
+                VersionConfiguration versionConfig = new()
+                {
+                    Version = siteConfig.Version,
+                    VersionPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                        "Downloads",
+                        $"AcumaticaERP_{siteConfig.Version.MinorVersion}.msi"
+                    ),
+                    InstallDebugTools = siteConfig.SiteType == SiteType.Development,
+                    ForceInstall      = false
+                };
+
                 bool installSuccess =
-                    _versionService.InstallVersion(siteConfig.Version);
+                    _versionService.InstallVersion(versionConfig);
 
                 if (!installSuccess)
                 {
@@ -104,7 +116,7 @@ public class SiteService : ISiteService
             if (success && isDev)
             {
                 _loggingService.WriteStep("Applying development configuration");
-                var webConfigPath = Path.Combine(siteConfig.SitePath, "web.config");
+                string webConfigPath = Path.Combine(siteConfig.SitePath, "web.config");
                 _webConfigService.ApplyDevelopmentConfiguration(webConfigPath);
             }
 
@@ -235,5 +247,4 @@ public class SiteService : ISiteService
 
         return false;
     }
-
 }

@@ -96,7 +96,7 @@ public class VersionService : IVersionService
             string downloadUrl = GetDownloadUrl(config.Version);
             _loggingService.WriteInfo($"Download URL: {downloadUrl}");
 
-            string tempFile = DownloadVersion(downloadUrl, config.Version.MinorVersion);
+            string tempFile = DownloadVersion(downloadUrl);
 
             _loggingService.WriteSection("Installing Version");
 
@@ -182,24 +182,18 @@ public class VersionService : IVersionService
     {
         var baseUrl = "https://acumatica-builds.s3.amazonaws.com";
 
-        // Get Major
-        string[] parts        = version.MinorVersion.Split('.');
-        int      minor        = int.Parse(parts[1]);
-        var      roundedMinor = (int)Math.Round(minor / 100.0);
-        var      majorVersion = $"{parts[0]}.{roundedMinor}";
-
         var url = $"{baseUrl}/builds/";
         if (version.IsPreview)
             // Preview versions follow the builds/preview/major.minor/version/AcumaticaERP/ pattern
             url += "preview/";
 
-        url += $"{majorVersion}/{version}/AcumaticaERP/AcumaticaERPInstall.msi";
+        url += $"{version.MajorVersion}/{version.MinorVersion}/AcumaticaERP/AcumaticaERPInstall.msi";
         return url;
     }
 
-    private string DownloadVersion(string url, string version)
+    private string DownloadVersion(string url)
     {
-        var tempFile = Path.Combine(Path.GetTempPath(), $"AcumaticaERP_{version}.msi");
+        string tempFile = Path.Combine(Path.GetTempPath(), $"AcumaticaERP_{DateTime.Now.ToFileTime()}.msi");
         _loggingService.WriteProgress("Downloading installer...");
 
         using HttpResponseMessage response = _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
@@ -214,7 +208,7 @@ public class VersionService : IVersionService
         int  bytesRead;
         var  lastReportedPercentage = 0;
 
-        _loggingService.WriteProgressBar("Downloading version " + version, 0);
+        _loggingService.WriteProgressBar("Downloading version", 0);
         while ((bytesRead = contentStream.ReadAsync(buffer, 0, buffer.Length).Result) > 0)
         {
             fileStream.WriteAsync(buffer, 0, bytesRead).Wait();
@@ -239,7 +233,7 @@ public class VersionService : IVersionService
 
     private bool InstallMsi(string msiPath, AcumaticaVersion version, string versionPath)
     {
-        var installPath = versionPath;
+        string installPath = versionPath;
         Directory.CreateDirectory(installPath);
 
         string features                     = string.Empty;
@@ -295,7 +289,7 @@ public class VersionService : IVersionService
                 {
                     string relativePath    = Path.GetRelativePath(acumaticaDir, file);
                     var    destinationPath = Path.Combine(installPath, relativePath);
-                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? string.Empty);
                     File.Move(file, destinationPath);
                 }
 

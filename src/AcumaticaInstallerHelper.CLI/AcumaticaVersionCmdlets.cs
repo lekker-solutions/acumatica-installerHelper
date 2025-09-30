@@ -21,7 +21,13 @@ namespace AcumaticaInstallerHelper.CLI
         {
             try
             {
-                var success = AcumaticaManager.InstallVersion(Version, Preview.IsPresent, DebugTools.IsPresent);
+                var acumaticaVersion = new AcumaticaVersion
+                {
+                    Version = Version,
+                    IsPreview = Preview.IsPresent,
+                    DebuggerTools = DebugTools.IsPresent
+                };
+                var success = AcumaticaManager.InstallVersion(acumaticaVersion);
                 WriteObject(success);
             
                 if (success)
@@ -56,7 +62,11 @@ namespace AcumaticaInstallerHelper.CLI
         {
             try
             {
-                var success = AcumaticaManager.RemoveVersion(Version);
+                var acumaticaVersion = new AcumaticaVersion
+                {
+                    Version = Version
+                };
+                var success = AcumaticaManager.RemoveVersion(acumaticaVersion);
                 WriteObject(success);
             
                 if (success)

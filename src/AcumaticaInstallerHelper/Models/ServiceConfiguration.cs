@@ -97,12 +97,11 @@ public class AcumaticaVersion
     private static string GetMajorVersion(string version)
     {
         if (string.IsNullOrEmpty(version)) return string.Empty;
-        
-        var parts = version.Split('.');
-        if (parts.Length >= 2)
-        {
-            return $"{parts[0]}.{parts[1]}";
-        }
-        return version;
+
+        string[] parts        = version.Split('.');
+        int      minor        = int.Parse(parts[1]);
+        var      roundedMinor = (int)Math.Round(minor / 100.0);
+        var      majorVersion = $"{parts[0]}.{roundedMinor}";
+        return majorVersion;
     }
 }

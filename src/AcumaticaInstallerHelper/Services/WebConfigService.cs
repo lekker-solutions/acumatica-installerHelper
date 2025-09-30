@@ -11,14 +11,14 @@ public class WebConfigService : IWebConfigService
         _loggingService = loggingService;
     }
 
-    public string? GetSiteVersion(string webConfigPath)
+    public string GetSiteVersion(string webConfigPath)
     {
         try
         {
             if (!File.Exists(webConfigPath))
             {
                 _loggingService.WriteDebug($"Web.config not found at: {webConfigPath}");
-                return null;
+                return string.Empty;
             }
 
             // Parse web.config to extract version from appSettings
@@ -32,13 +32,13 @@ public class WebConfigService : IWebConfigService
             {
                 _loggingService.WriteDebug($"Found version {version} in web.config");
             }
-            
-            return version;
+
+            return version ?? string.Empty;
         }
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to get version from web.config: {ex.Message}");
-            return null;
+            return string.Empty;
         }
     }
 

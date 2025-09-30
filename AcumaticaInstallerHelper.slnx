@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/info/">
+    <File Path="AcuInstallerHelper/AcuInstallerHelper_config.json" />
+  </Folder>
   <Project Path="src/AcumaticaInstallerHelper.CLI/AcumaticaInstallerHelper.CLI.csproj" />
   <Project Path="src/AcumaticaInstallerHelper/AcumaticaInstallerHelper.csproj" />
 </Solution>

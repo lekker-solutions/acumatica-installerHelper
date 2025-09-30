@@ -37,16 +37,26 @@ namespace AcumaticaInstallerHelper.CLI
         {
             try
             {
-                var options = new SiteInstallOptions
+                var acumaticaVersion = new AcumaticaVersion
                 {
+                    Version = Version,
+                    IsPreview = Preview.IsPresent,
                     InstallNewVersion = InstallVersion.IsPresent,
-                    Portal            = Portal.IsPresent,
-                    SiteType          = Development.IsPresent ? SiteType.Development : null,
-                    Preview           = Preview.IsPresent,
-                    DebuggerTools     = DebugTools.IsPresent
+                    DebuggerTools = DebugTools.IsPresent
                 };
 
-                var success = AcumaticaManager.CreateSite(Version, Name, Path, options);
+                var siteConfig = new SiteConfiguration
+                {
+                    Action = SiteAction.NewInstance,
+                    SiteName = Name,
+                    SitePath = Path ?? string.Empty,
+                    Version = acumaticaVersion,
+                    IsPortal = Portal.IsPresent,
+                    SiteType = Development.IsPresent ? SiteType.Development : SiteType.Production,
+                    IsPreview = Preview.IsPresent
+                };
+
+                var success = AcumaticaManager.CreateSite(siteConfig);
                 WriteObject(success);
             
                 if (success)

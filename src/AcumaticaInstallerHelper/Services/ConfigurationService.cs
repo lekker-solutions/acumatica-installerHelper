@@ -8,6 +8,11 @@ public class ConfigurationService : IConfigurationService
     private readonly string               _configFilePath;
     private          ModuleConfiguration? _cachedConfig;
 
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
     public ConfigurationService()
     {
         var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
@@ -48,12 +53,7 @@ public class ConfigurationService : IConfigurationService
     {
         try
         {
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
-            
-            var jsonContent = JsonSerializer.Serialize(config, options);
+            string jsonContent = JsonSerializer.Serialize(config, _jsonOptions);
             File.WriteAllText(_configFilePath, jsonContent);
             
             _cachedConfig = config;

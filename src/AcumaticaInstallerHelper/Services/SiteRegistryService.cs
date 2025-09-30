@@ -4,13 +4,13 @@ namespace AcumaticaInstallerHelper.Services;
 
 public class SiteRegistryService : ISiteRegistryService
 {
-    private const string ACUMATICA_REGISTRY_KEY = @"SOFTWARE\ACUMATICA ERP";
-    private readonly ILoggingService _loggingService;
+    private const    string            ACUMATICA_REGISTRY_KEY = @"SOFTWARE\ACUMATICA ERP";
+    private readonly ILoggingService   _loggingService;
     private readonly IWebConfigService _webConfigService;
 
     public SiteRegistryService(ILoggingService loggingService, IWebConfigService webConfigService)
     {
-        _loggingService = loggingService;
+        _loggingService   = loggingService;
         _webConfigService = webConfigService;
     }
 
@@ -22,14 +22,14 @@ public class SiteRegistryService : ISiteRegistryService
             if (key == null)
             {
                 _loggingService.WriteDebug($"Registry key not found for site: {siteName}");
-                return null;
+                return string.Empty;
             }
 
             var path = key.GetValue("Path") as string;
             if (string.IsNullOrEmpty(path))
             {
                 _loggingService.WriteDebug($"Path value not found or empty for site: {siteName}");
-                return null;
+                return string.Empty;
             }
 
             _loggingService.WriteDebug($"Found site path in registry: {path}");
@@ -38,7 +38,7 @@ public class SiteRegistryService : ISiteRegistryService
         catch (Exception ex)
         {
             _loggingService.WriteError($"Failed to read site path from registry for {siteName}: {ex.Message}");
-            return null;
+            return string.Empty;
         }
     }
 
@@ -92,14 +92,14 @@ public class SiteRegistryService : ISiteRegistryService
 
     public string GetSiteVersion(string siteName)
     {
-        var sitePath = GetSitePath(siteName);
+        string sitePath = GetSitePath(siteName);
         if (string.IsNullOrEmpty(sitePath))
         {
             _loggingService.WriteDebug($"Could not find site path for: {siteName}");
-            return null;
+            return string.Empty;
         }
 
-        var webConfigPath = Path.Combine(sitePath, "web.config");
+        string webConfigPath = Path.Combine(sitePath, "web.config");
         return _webConfigService.GetSiteVersion(webConfigPath);
     }
 }
