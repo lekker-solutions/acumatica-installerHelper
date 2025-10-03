@@ -1,6 +1,12 @@
 Describe "AcumaticaVersionCmdlets" {
     BeforeAll {
         Import-Module "$PSScriptRoot\..\AcuInstallerHelper" -Force
+        
+        # Define test versions - adjust these as needed
+        $script:NormalVersion = "24.215.0011"
+        $script:PreviewVersion = "25.193.0171"
+        
+        Write-Host "Starting version tests with Normal: $script:NormalVersion, Preview: $script:PreviewVersion" -ForegroundColor Cyan
     }
 
     Context "Install-AcumaticaVersion" {
@@ -53,6 +59,44 @@ Describe "AcumaticaVersionCmdlets" {
                 # Expected if installation fails
             }
         }
+
+        It "Should install normal version successfully" {
+            Write-Host "Installing normal version: $script:NormalVersion" -ForegroundColor Green
+            
+            $result = Install-AcumaticaVersion -Version $script:NormalVersion -Force
+            $result | Should -Be $true
+            
+            # Verify installation
+            $installedVersions = Get-AcumaticaVersion
+            $installedVersions | Should -Not -BeNullOrEmpty
+            
+            $versionFound = $false
+            @($installedVersions) | ForEach-Object {
+                if ($_.ToString() -like "*$script:NormalVersion*") {
+                    $versionFound = $true
+                }
+            }
+            $versionFound | Should -Be $true
+        }
+
+        It "Should install preview version successfully" {
+            Write-Host "Installing preview version: $script:PreviewVersion" -ForegroundColor Green
+            
+            $result = Install-AcumaticaVersion -Version $script:PreviewVersion -Preview -Force
+            $result | Should -Be $true
+            
+            # Verify installation
+            $installedVersions = Get-AcumaticaVersion
+            $installedVersions | Should -Not -BeNullOrEmpty
+            
+            $versionFound = $false
+            @($installedVersions) | ForEach-Object {
+                if ($_.ToString() -like "*$script:PreviewVersion*") {
+                    $versionFound = $true
+                }
+            }
+            $versionFound | Should -Be $true
+        }
     }
 
     Context "Uninstall-AcumaticaVersion" {
@@ -72,6 +116,41 @@ Describe "AcumaticaVersionCmdlets" {
             catch {
                 # Expected if version doesn't exist
             }
+        }
+
+        It "Should uninstall preview version successfully" {
+            Write-Host "Uninstalling preview version: $script:PreviewVersion" -ForegroundColor Yellow
+            
+            $result = Uninstall-AcumaticaVersion -Version $script:PreviewVersion -Force
+            $result | Should -Be $true
+            
+            # Verify uninstallation
+            $installedVersions = Get-AcumaticaVersion
+            
+            $versionFound = $false
+            if ($installedVersions) {
+                @($installedVersions) | ForEach-Object {
+                    if ($_.ToString() -like "*$script:PreviewVersion*") {
+                        $versionFound = $true
+                    }
+                }
+            }
+            $versionFound | Should -Be $false
+        }
+
+        It "Should still have normal version installed after preview uninstall" {
+            Write-Host "Verifying normal version still exists: $script:NormalVersion" -ForegroundColor Cyan
+            
+            $installedVersions = Get-AcumaticaVersion
+            $installedVersions | Should -Not -BeNullOrEmpty
+            
+            $versionFound = $false
+            @($installedVersions) | ForEach-Object {
+                if ($_.ToString() -like "*$script:NormalVersion*") {
+                    $versionFound = $true
+                }
+            }
+            $versionFound | Should -Be $true
         }
     }
 
@@ -162,6 +241,28 @@ Describe "AcumaticaVersionCmdlets" {
             if ($null -ne $versions) {
                 $versions.GetType().Name | Should -BeIn @('Object[]', 'PSCustomObject', 'AcumaticaVersion', 'ArrayList')
             }
+        }
+    }
+
+    Context "Test Cleanup" {
+        It "Should uninstall normal version after tests" {
+            Write-Host "Final cleanup: Uninstalling normal version: $script:NormalVersion" -ForegroundColor Red
+            
+            $result = Uninstall-AcumaticaVersion -Version $script:NormalVersion -Force
+            $result | Should -Be $true
+            
+            # Verify uninstallation
+            $installedVersions = Get-AcumaticaVersion
+            
+            $versionFound = $false
+            if ($installedVersions) {
+                @($installedVersions) | ForEach-Object {
+                    if ($_.ToString() -like "*$script:NormalVersion*") {
+                        $versionFound = $true
+                    }
+                }
+            }
+            $versionFound | Should -Be $false
         }
     }
 }

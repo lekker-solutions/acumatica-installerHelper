@@ -53,7 +53,8 @@ namespace AcumaticaInstallerHelper.CLI
                     Version = acumaticaVersion,
                     IsPortal = Portal.IsPresent,
                     SiteType = Development.IsPresent ? SiteType.Development : SiteType.Production,
-                    IsPreview = Preview.IsPresent
+                    IsPreview = Preview.IsPresent,
+                    ForceInstall = Force.IsPresent
                 };
 
                 var success = AcumaticaManager.CreateSite(siteConfig);

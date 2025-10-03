@@ -49,6 +49,20 @@ public class SiteService : ISiteService
             }
             _loggingService.WriteSuccess("Administrator privileges confirmed");
 
+            // Check if site already exists
+            if (_siteRegistryService.SiteExists(siteConfig.SiteName))
+            {
+                _loggingService.WriteWarning($"Site '{siteConfig.SiteName}' already exists");
+                
+                if (!_loggingService.PromptYesNo($"Site '{siteConfig.SiteName}' already exists. Do you want to continue and potentially overwrite it?"))
+                {
+                    _loggingService.WriteError("Site creation cancelled - site already exists");
+                    return false;
+                }
+                
+                _loggingService.WriteInfo($"Continuing with existing site '{siteConfig.SiteName}'");
+            }
+
             // Check if version exists
             if (!_versionService.IsVersionInstalled(siteConfig.Version))
             {
@@ -69,13 +83,9 @@ public class SiteService : ISiteService
                 VersionConfiguration versionConfig = new()
                 {
                     Version = siteConfig.Version,
-                    VersionPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                        "Downloads",
-                        $"AcumaticaERP_{siteConfig.Version.MinorVersion}.msi"
-                    ),
+                    VersionPath = _versionService.GetVersionPath(siteConfig.Version),
                     InstallDebugTools = siteConfig.SiteType == SiteType.Development,
-                    ForceInstall      = false
+                    ForceInstall      = siteConfig.ForceInstall
                 };
 
                 bool installSuccess =

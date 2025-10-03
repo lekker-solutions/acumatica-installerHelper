@@ -1,6 +1,26 @@
 Describe "AcumaticaSiteCmdlets" {
     BeforeAll {
         Import-Module "$PSScriptRoot\..\AcuInstallerHelper" -Force
+        
+        # Use the same normal version that was installed in version tests
+        $script:NormalVersion = "24.215.0011"
+        $script:TestSiteName = "TestSite"
+        
+        Write-Host "Starting site tests with Normal version: $script:NormalVersion" -ForegroundColor Cyan
+    }
+
+    AfterAll {
+        # Cleanup: Remove test site if it exists
+        try {
+            $existingSites = Get-AcumaticaSite
+            if ($existingSites -and $existingSites -contains $script:TestSiteName) {
+                Write-Host "Cleaning up test site: $script:TestSiteName" -ForegroundColor Yellow
+                Remove-AcumaticaSite -Name $script:TestSiteName -Force
+            }
+        }
+        catch {
+            Write-Warning "Failed to cleanup test site: $($_.Exception.Message)"
+        }
     }
 
     Context "New-AcumaticaSite" {
@@ -80,6 +100,52 @@ Describe "AcumaticaSiteCmdlets" {
                 # Expected if version doesn't exist
             }
         }
+
+        It "Should create site with normal version successfully" {
+            Write-Host "Creating site '$script:TestSiteName' with normal version: $script:NormalVersion" -ForegroundColor Green
+            
+            # Remove site if it already exists
+            try {
+                $existingSites = Get-AcumaticaSite
+                if ($existingSites -and $existingSites -contains $script:TestSiteName) {
+                    Remove-AcumaticaSite -Name $script:TestSiteName -Force
+                }
+            }
+            catch {
+                # Site doesn't exist, continue
+            }
+            
+            $result = New-AcumaticaSite -Version $script:NormalVersion -Name $script:TestSiteName -Force
+            $result | Should -Be $true
+        }
+
+        It "Should create site with Development switch" {
+            Write-Host "Creating development site with normal version: $script:NormalVersion" -ForegroundColor Green
+            
+            $devSiteName = "$($script:TestSiteName)Dev"
+            
+            # Remove site if it already exists
+            try {
+                $existingSites = Get-AcumaticaSite
+                if ($existingSites -and $existingSites -contains $devSiteName) {
+                    Remove-AcumaticaSite -Name $devSiteName -Force
+                }
+            }
+            catch {
+                # Site doesn't exist, continue
+            }
+            
+            $result = New-AcumaticaSite -Version $script:NormalVersion -Name $devSiteName -Development -Force
+            $result | Should -Be $true
+            
+            # Cleanup
+            try {
+                Remove-AcumaticaSite -Name $devSiteName -Force
+            }
+            catch {
+                # Ignore cleanup errors
+            }
+        }
     }
 
     Context "Remove-AcumaticaSite" {
@@ -103,6 +169,14 @@ Describe "AcumaticaSiteCmdlets" {
     }
 
     Context "Get-AcumaticaSite" {
+        It "Should list the created site" {
+            Write-Host "Verifying site '$script:TestSiteName' exists" -ForegroundColor Cyan
+            
+            $sites = Get-AcumaticaSite
+            $sites | Should -Not -BeNullOrEmpty
+            $sites | Should -Contain $script:TestSiteName
+        }
+
         It "Should return site list without parameters" {
             $sites = Get-AcumaticaSite
             
@@ -117,6 +191,18 @@ Describe "AcumaticaSiteCmdlets" {
                 # Null is acceptable if no sites are installed
                 $sites | Should -BeNullOrEmpty
             }
+        }
+
+        It "Should show site with correct version when using IncludeVersion" {
+            Write-Host "Verifying site version information" -ForegroundColor Cyan
+            
+            $sitesWithVersion = Get-AcumaticaSite -IncludeVersion
+            $sitesWithVersion | Should -Not -BeNullOrEmpty
+            
+            $testSiteInfo = @($sitesWithVersion) | Where-Object { $_.Name -eq $script:TestSiteName }
+            $testSiteInfo | Should -Not -BeNullOrEmpty
+            $testSiteInfo.Name | Should -Be $script:TestSiteName
+            $testSiteInfo.Version | Should -BeLike "*$script:NormalVersion*"
         }
 
         It "Should accept IncludeVersion switch and return objects with Name and Version properties" {

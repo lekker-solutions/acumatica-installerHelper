@@ -3,5 +3,5 @@
   "AcumaticaSiteDir": "Sites",
   "AcumaticaVersionDir": "Versions",
   "SiteType": "Development",
-  "InstallDebugTools": true
+  "InstallDebugTools": false
 }

@@ -2,6 +2,8 @@ namespace AcumaticaInstallerHelper.Services;
 
 public class ConsoleLoggingService : ILoggingService
 {
+    public bool OverridePromptsToYes { get; set; } = false;
+
     public ConsoleLoggingService()
     {
     }
@@ -95,6 +97,18 @@ public class ConsoleLoggingService : ILoggingService
 
     public bool PromptYesNo(string message)
     {
+        if (OverridePromptsToYes)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write("? ");
+            Console.ResetColor();
+            Console.Write($"{message} (Y/N): ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Y [Auto-answered]");
+            Console.ResetColor();
+            return true;
+        }
+
         while (true)
         {
             Console.ForegroundColor = ConsoleColor.Magenta;

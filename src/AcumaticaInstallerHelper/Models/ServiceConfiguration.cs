@@ -7,13 +7,14 @@ namespace AcumaticaInstallerHelper.Models;
 /// </summary>
 public record SiteConfiguration
 {
-    public required SiteAction       Action    { get; init; }
-    public required string           SiteName  { get; init; }
-    public required string           SitePath  { get; init; }
-    public required AcumaticaVersion Version   { get; init; }
-    public          bool             IsPortal  { get; init; }
-    public          SiteType         SiteType  { get; init; } = SiteType.NotSet;
-    public          bool             IsPreview { get; init; }
+    public required SiteAction       Action       { get; init; }
+    public required string           SiteName     { get; init; }
+    public required string           SitePath     { get; init; }
+    public required AcumaticaVersion Version      { get; init; }
+    public          bool             IsPortal     { get; init; }
+    public          SiteType         SiteType     { get; init; } = SiteType.NotSet;
+    public          bool             IsPreview    { get; init; }
+    public          bool             ForceInstall { get; init; }
 }
 
 /// <summary>

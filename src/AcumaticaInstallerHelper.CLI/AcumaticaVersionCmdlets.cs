@@ -27,7 +27,7 @@ namespace AcumaticaInstallerHelper.CLI
                     IsPreview = Preview.IsPresent,
                     DebuggerTools = DebugTools.IsPresent
                 };
-                var success = AcumaticaManager.InstallVersion(acumaticaVersion);
+                var success = AcumaticaManager.InstallVersion(acumaticaVersion, Force.IsPresent);
                 WriteObject(success);
             
                 if (success)

@@ -31,6 +31,11 @@ public class AcumaticaManager
     // Version Management
     public bool InstallVersion(AcumaticaVersion version)
     {
+        return InstallVersion(version, false);
+    }
+
+    public bool InstallVersion(AcumaticaVersion version, bool force)
+    {
         var versionPath = Path.Combine(
             _configService.GetAcumaticaDirectory(),
             _configService.GetVersionDirectory(),
@@ -42,7 +47,7 @@ public class AcumaticaManager
             Version = version,
             VersionPath = versionPath,
             InstallDebugTools = _configService.GetInstallDebugTools(),
-            ForceInstall = version.InstallNewVersion
+            ForceInstall = force || version.InstallNewVersion
         };
         
         return _versionService.InstallVersion(config);
@@ -112,10 +117,11 @@ public class AcumaticaManager
 
         return _siteService.RemoveSite(new SiteConfiguration
         {
-            Action   = SiteAction.DeleteSite,
-            SiteName = siteName,
-            SitePath = sitePath,
-            Version  = new AcumaticaVersion()
+            Action       = SiteAction.DeleteSite,
+            SiteName     = siteName,
+            SitePath     = sitePath,
+            Version      = new AcumaticaVersion(),
+            ForceInstall = false
         });
     }
 
@@ -129,13 +135,14 @@ public class AcumaticaManager
 
         return _siteService.UpdateSite(new SiteConfiguration
         {
-            Action   = SiteAction.UpgradeSite,
-            SiteName = siteName,
-            SitePath = sitePath,
+            Action       = SiteAction.UpgradeSite,
+            SiteName     = siteName,
+            SitePath     = sitePath,
             Version = new AcumaticaVersion
             {
                 Version = newVersion
-            }
+            },
+            ForceInstall = false
         });
     }
 

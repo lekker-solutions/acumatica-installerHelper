@@ -27,4 +27,5 @@ public interface ILoggingService
     void WriteWarning(string                   message);
     void WriteError(string                     message);
     void WriteProgressBar(string               message, int percentage);
+    bool OverridePromptsToYes { get; set; }
 }
