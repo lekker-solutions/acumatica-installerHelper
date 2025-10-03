@@ -33,6 +33,13 @@ public class SiteService : ISiteService
         return !principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
 
+    private bool IsAdministrator()
+    {
+        using var identity = WindowsIdentity.GetCurrent();
+        var principal = new WindowsPrincipal(identity);
+        return principal.IsInRole(WindowsBuiltInRole.Administrator);
+    }
+
     public bool CreateSite(SiteConfiguration siteConfig)
     {
         _loggingService.WriteHeader("Acumatica Site Installation", $"Version {siteConfig.Version} • Site: {siteConfig.SiteName}");
@@ -42,7 +49,7 @@ public class SiteService : ISiteService
             _loggingService.WriteSection("Validating Prerequisites");
 
             // Check administrator privileges
-            if (RequiresAdministratorPrivileges())
+            if (!IsAdministrator())
             {
                 _loggingService.WriteError("Administrator privileges required");
                 throw new UnauthorizedAccessException("This operation must be run as Administrator");
@@ -145,7 +152,6 @@ public class SiteService : ISiteService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to create site: {ex.Message}");
             _loggingService.WriteError($"Failed to create site {siteConfig.SiteName}: {ex.Message}");
             return false;
         }
@@ -171,7 +177,6 @@ public class SiteService : ISiteService
         }
         catch (Exception ex)
         {
-            _loggingService.WriteError($"Failed to remove site: {ex.Message}");
             _loggingService.WriteError($"Failed to remove site {siteConfig.SiteName}: {ex.Message}");
             return false;
         }

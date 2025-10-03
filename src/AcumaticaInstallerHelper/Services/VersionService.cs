@@ -88,6 +88,11 @@ public class VersionService : IVersionService
             _loggingService.WriteWarning($"Version {config.Version.MinorVersion} is already installed");
             return true;
         }
+        
+        if (config.ForceInstall && IsVersionInstalled(config.Version))
+        {
+            _loggingService.WriteInfo($"Force installing version {config.Version.MinorVersion} (already installed)");
+        }
 
         try
         {
