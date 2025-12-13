@@ -236,9 +236,9 @@ public class AcumaticaManager
         return _patchService.CheckForPatches(patchConfig);
     }
 
-    public PatchResult ApplyPatch(string siteName, string? backupPath = null)
+    public PatchResult ApplyPatch(string siteName, string? sitePath = null, string? backupPath = null)
     {
-        string? sitePath = _siteRegistryService.GetSitePath(siteName);
+        sitePath ??= _siteRegistryService.GetSitePath(siteName);
         if (string.IsNullOrEmpty(sitePath))
             throw new InvalidOperationException($"Could not find site path for: {siteName}");
 
