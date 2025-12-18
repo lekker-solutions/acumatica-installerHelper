@@ -11,19 +11,22 @@ public class SiteService : ISiteService
     private readonly ILoggingService      _loggingService;
     private readonly ISiteRegistryService _siteRegistryService;
     private readonly IWebConfigService    _webConfigService;
+    private readonly IProcessManagerService _processManagerService;
 
     public SiteService(
         IVersionService      versionService,
         IAcArgBuilderFactory argFactory,
         ILoggingService      loggingService,
         ISiteRegistryService siteRegistryService,
-        IWebConfigService    webConfigService)
+        IWebConfigService webConfigService,
+        IProcessManagerService processManagerService)
     {
         _versionService      = versionService;
         _argFactory          = argFactory;
         _loggingService      = loggingService;
         _siteRegistryService = siteRegistryService;
         _webConfigService    = webConfigService;
+        _processManagerService = processManagerService;
     }
 
     public bool RequiresAdministratorPrivileges()
@@ -195,71 +198,17 @@ public class SiteService : ISiteService
     private bool ExecuteAcuExe(SiteConfiguration siteConfig, IAcArgBuilder argBuilder)
     {
         var acExePath = _versionService.GetAcuExePath(siteConfig.Version);
+        var arguments = argBuilder.BuildArgs(siteConfig);
 
-        if (!File.Exists(acExePath))
+        var request = new ProcessExecutionRequest
         {
-            _loggingService.WriteError($"Configuration utility not found at: {acExePath}");
-            return false;
-        }
-
-        var    arguments      = argBuilder.BuildArgs(siteConfig);
-        string argumentString = string.Join(" ", arguments);
-        _loggingService.WriteProgress("Executing Acumatica configuration utility...");
-        _loggingService.WriteDebug($"ac.exe path: {acExePath}");
-        _loggingService.WriteDebug($"Arguments: {argumentString}");
-
-        using Process process = new()
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName               = acExePath,
-                Arguments              = argumentString,
-                UseShellExecute        = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError  = true,
-                CreateNoWindow         = true
-            }
+            ExecutablePath = acExePath,
+            Arguments = arguments,
+            UseRealTimeLogging = true,
+            ThrowOnError = false
         };
 
-        var outputBuffer = new List<string>();
-        var errorBuffer = new List<string>();
-
-        process.OutputDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-            {
-                outputBuffer.Add(e.Data);
-                _loggingService.WriteInfo($"ac.exe: {e.Data}");
-            }
-        };
-
-        process.ErrorDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-            {
-                errorBuffer.Add(e.Data);
-                _loggingService.WriteWarning($"ac.exe: {e.Data}");
-            }
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        process.WaitForExit();
-
-        if (process.ExitCode == 0)
-        {
-            _loggingService.WriteSuccess("ac.exe completed successfully");
-            return true;
-        }
-
-        _loggingService.WriteError($"ac.exe failed with exit code: {process.ExitCode}");
-        if (errorBuffer.Count > 0)
-        {
-            _loggingService.WriteError("Error details:");
-            foreach (string error in errorBuffer) _loggingService.WriteError($"  {error}");
-        }
-
-        return false;
+        var result = _processManagerService.ExecuteProcess(request);
+        return result.Success;
     }
 }

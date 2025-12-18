@@ -8,16 +8,19 @@ public class PatchService : IPatchService
 {
     private readonly IVersionService _versionService;
     private readonly ILoggingService _loggingService;
-    
+    private readonly IProcessManagerService _processManagerService;
+
     private static readonly Regex PatchFoundRegex = new(@"A new patch found: (.+) P(\d+)", RegexOptions.Compiled);
     private static readonly Regex PatchAppliedRegex = new(@"The patch with the (.+) P(\d+) version has been applied", RegexOptions.Compiled);
 
     public PatchService(
         IVersionService versionService,
-        ILoggingService loggingService)
+        ILoggingService loggingService,
+        IProcessManagerService processManagerService)
     {
         _versionService = versionService;
         _loggingService = loggingService;
+        _processManagerService = processManagerService;
     }
 
     public string GetPatchToolPath(AcumaticaVersion version)
@@ -75,7 +78,7 @@ public class PatchService : IPatchService
         {
             var patchToolPath = GetPatchToolPath(config.Version);
             var sitePath = config.SitePath;
-            var arguments = $"check --path \"{sitePath}\"";
+            var arguments = new[] { "check", "--path", sitePath };
 
             var output = ExecutePatchTool(patchToolPath, arguments);
 
@@ -125,14 +128,14 @@ public class PatchService : IPatchService
         {
             var patchToolPath = GetPatchToolPath(config.Version);
             var sitePath = config.SitePath;
-            var arguments = $"patch --path \"{sitePath}\"";
+            var argumentsList = new List<string> { "patch", "--path", sitePath };
             
             if (!string.IsNullOrEmpty(backupPath))
             {
-                arguments += $" --zip \"{backupPath}\"";
+                argumentsList.AddRange(new[] { "--zip", backupPath });
             }
 
-            var output = ExecutePatchTool(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, argumentsList.ToArray());
 
             var match = PatchAppliedRegex.Match(output);
             if (match.Success)
@@ -189,14 +192,14 @@ public class PatchService : IPatchService
         {
             var patchToolPath = GetPatchToolPath(config.Version);
             var sitePath = config.SitePath;
-            var arguments = $"patch --path \"{sitePath}\" --archive \"{archivePath}\"";
+            var argumentsList = new List<string> { "patch", "--path", sitePath, "--archive", archivePath };
             
             if (!string.IsNullOrEmpty(backupPath))
             {
-                arguments += $" --zip \"{backupPath}\"";
+                argumentsList.AddRange(new[] { "--zip", backupPath });
             }
 
-            var output = ExecutePatchTool(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, argumentsList.ToArray());
 
             var match = PatchAppliedRegex.Match(output);
             if (match.Success)
@@ -244,14 +247,14 @@ public class PatchService : IPatchService
         {
             var patchToolPath = GetPatchToolPath(config.Version);
             var sitePath = config.SitePath;
-            var arguments = $"rollback --path \"{sitePath}\"";
+            var argumentsList = new List<string> { "rollback", "--path", sitePath };
             
             if (!string.IsNullOrEmpty(backupPath))
             {
-                arguments += $" --zip \"{backupPath}\"";
+                argumentsList.AddRange(new[] { "--zip", backupPath });
             }
 
-            var output = ExecutePatchTool(patchToolPath, arguments);
+            var output = ExecutePatchTool(patchToolPath, argumentsList.ToArray());
 
             if (output.Contains("Rollback completed"))
             {
@@ -289,36 +292,26 @@ public class PatchService : IPatchService
     }
 
 
-    private string ExecutePatchTool(string patchToolPath, string arguments)
+    private string ExecutePatchTool(string patchToolPath, string[] arguments)
     {
-        _loggingService.WriteDebug($"Executing PatchTool with arguments: {arguments}");
+        _loggingService.WriteInfo($"Executing PatchTool: {patchToolPath} {string.Join(" ", arguments)}");
 
-        using var process = new Process
+        var request = new ProcessExecutionRequest
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = patchToolPath,
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            }
+            ExecutablePath = patchToolPath,
+            Arguments = arguments,
+            UseRealTimeLogging = false,
+            ThrowOnError = true
         };
 
-        process.Start();
-        
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-        
-        process.WaitForExit();
+        var result = _processManagerService.ExecuteProcess(request);
 
-        if (process.ExitCode != 0 && !string.IsNullOrEmpty(error))
+        if (!result.Success)
         {
-            throw new InvalidOperationException($"PatchTool failed with exit code {process.ExitCode}: {error}");
+            throw new InvalidOperationException(result.ErrorMessage ?? "PatchTool execution failed");
         }
 
-        return output.Trim();
+        return result.Output;
     }
 
     private static bool IsPatchingSupportedForVersion(string version)

@@ -9,8 +9,17 @@ public class NewInstanceArgBuilder : IAcArgBuilder
         var args = new List<string>
         {
             "-configmode:NewInstance",
-            $"-sitename:\"{siteConfig.SiteName}\"",
-            $"-sitepath:\"{siteConfig.SitePath}\""
+            $"-iname:\"{siteConfig.SiteName}\"",
+            $"-ipath:\"{siteConfig.SitePath}\"",
+            $"-dbsrvname:\"{siteConfig.DBServer}\"",
+            $"-dbname:\"{siteConfig.DBName}\"",
+            "-dbsrvwinauth:True",
+            $"-swebsite:\"{siteConfig.IISWebsite}\"",
+            $"-svirtdir:\"{siteConfig.SiteName}\"",
+            $"-spool:\"{siteConfig.IISAppPool}\"",
+            "-output:Quiet",
+            "-company:\"CompanyID=1;CompanyType=;LoginName=;\"",
+            "-company:\"CompanyID=2;CompanyType=SalesDemo;ParentID=1;Visible=Yes;LoginName=Company;\"",
         };
 
         if (siteConfig.IsPortal)

@@ -1,14 +1,15 @@
+using System;
 using AcumaticaInstallerHelper.Models;
 
 namespace AcumaticaInstallerHelper.Services.AcArgBuilders;
 
-public class UpgradeSiteArgBuilder : IAcArgBuilder
+public class RenameSiteArgBuilder : IAcArgBuilder
 {
     public IEnumerable<string> BuildArgs(SiteConfiguration siteConfig)
     {
         return new List<string>
         {
-            "-configmode:UpgradeSite",
+            "-configmode:RenameSite",
             $"-sitename:\"{siteConfig.SiteName}\""
         };
     }

@@ -6,18 +6,21 @@ namespace AcumaticaInstallerHelper.Services;
 public class VersionService : IVersionService
 {
     private readonly IConfigurationService _configService;
-    private readonly ILoggingService       _loggingService;
-    private readonly HttpClient            _httpClient;
+    private readonly ILoggingService _loggingService;
+    private readonly HttpClient _httpClient;
+    private readonly IProcessManagerService _processManagerService;
 
 
     public VersionService(
         IConfigurationService configService,
-        ILoggingService       loggingService,
-        HttpClient            httpClient)
+        ILoggingService loggingService,
+        IProcessManagerService processManagerService,
+        HttpClient httpClient)
     {
-        _configService  = configService;
+        _configService = configService;
         _loggingService = loggingService;
-        _httpClient     = httpClient;
+        _httpClient = httpClient;
+        _processManagerService = processManagerService;
     }
 
     public bool IsVersionInstalled(AcumaticaVersion version)
@@ -67,10 +70,10 @@ public class VersionService : IVersionService
 
             AcumaticaVersion version = new()
             {
-                Version     = versionName,
-                Path        = directory,
+                Version = versionName,
+                Path = directory,
                 InstallDate = Directory.GetCreationTime(directory),
-                Size        = GetDirectorySize(directory)
+                Size = GetDirectorySize(directory)
             };
 
             versions.Add(version);
@@ -88,7 +91,7 @@ public class VersionService : IVersionService
             _loggingService.WriteWarning($"Version {config.Version.MinorVersion} is already installed");
             return true;
         }
-        
+
         if (config.ForceInstall && IsVersionInstalled(config.Version))
         {
             _loggingService.WriteInfo($"Force installing version {config.Version.MinorVersion} (already installed)");
@@ -119,10 +122,10 @@ public class VersionService : IVersionService
                 _loggingService.WriteSummary("Version Installation", "Completed Successfully",
                     new Dictionary<string, string>
                     {
-                        ["Version"]      = config.Version.MinorVersion,
+                        ["Version"] = config.Version.MinorVersion,
                         ["Install Path"] = config.VersionPath,
-                        ["Preview"]      = config.Version.IsPreview ? "Yes" : "No",
-                        ["Debug Tools"]  = config.InstallDebugTools ? "Yes" : "No"
+                        ["Preview"] = config.Version.IsPreview ? "Yes" : "No",
+                        ["Debug Tools"] = config.InstallDebugTools ? "Yes" : "No"
                     });
 
             return success;
@@ -147,7 +150,7 @@ public class VersionService : IVersionService
         try
         {
             string versionPath = config.VersionPath ?? GetVersionPath(config.Version);
-            long   size        = GetDirectorySize(versionPath);
+            long size = GetDirectorySize(versionPath);
 
             _loggingService.WriteInfo($"Removing version from: {versionPath}");
             _loggingService.WriteInfo($"Freeing up: {FormatBytes(size)}");
@@ -162,7 +165,7 @@ public class VersionService : IVersionService
 
             _loggingService.WriteSummary("Version Removal", "Completed Successfully", new Dictionary<string, string>
             {
-                ["Version"]     = config.Version.MinorVersion,
+                ["Version"] = config.Version.MinorVersion,
                 ["Freed Space"] = FormatBytes(size)
             });
 
@@ -204,14 +207,14 @@ public class VersionService : IVersionService
         using HttpResponseMessage response = _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
         response.EnsureSuccessStatusCode();
 
-        long             totalBytes    = response.Content.Headers.ContentLength ?? -1;
-        using Stream     contentStream = response.Content.ReadAsStreamAsync().Result;
-        using FileStream fileStream    = File.Create(tempFile);
+        long totalBytes = response.Content.Headers.ContentLength ?? -1;
+        using Stream contentStream = response.Content.ReadAsStreamAsync().Result;
+        using FileStream fileStream = File.Create(tempFile);
 
-        var  buffer          = new byte[8192];
+        var buffer = new byte[8192];
         long downloadedBytes = 0;
-        int  bytesRead;
-        var  lastReportedPercentage = 0;
+        int bytesRead;
+        var lastReportedPercentage = 0;
 
         _loggingService.WriteProgressBar("Downloading version", 0);
         while ((bytesRead = contentStream.ReadAsync(buffer, 0, buffer.Length).Result) > 0)
@@ -221,7 +224,7 @@ public class VersionService : IVersionService
 
             if (totalBytes > 0)
             {
-                var percentage     = (int)(downloadedBytes * 100 / totalBytes);
+                var percentage = (int)(downloadedBytes * 100 / totalBytes);
                 int percentageTens = percentage / 10 * 10; // Round down to nearest 10
 
                 if (percentageTens > lastReportedPercentage)
@@ -241,44 +244,21 @@ public class VersionService : IVersionService
         string installPath = versionPath;
         Directory.CreateDirectory(installPath);
 
-        string features                     = string.Empty;
-        if (version.DebuggerTools) features = "ADDLOCAL=DEBUGGERTOOLS";
-        var arguments                       = $"/a \"{msiPath}\" {features} /qb TARGETDIR=\"{installPath}\"";
+        string features = string.Empty;
+        if (version.DebuggerTools)
+            features = "ADDLOCAL=DEBUGGERTOOLS";
 
-        _loggingService.WriteProgress("Running MSI installer...");
-        _loggingService.WriteDebug($"MSI install arguments: {arguments}");
-
-        using Process process = new()
+        var request = new ProcessExecutionRequest
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName               = "msiexec.exe",
-                Arguments              = arguments,
-                UseShellExecute        = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError  = true,
-                CreateNoWindow         = true
-            }
+            ExecutablePath = "msiexec.exe",
+            Arguments = new[] { "/a", msiPath, features, "/qb", $"TARGETDIR={installPath}" },
+            UseRealTimeLogging = true,
+            ThrowOnError = false
         };
 
-        process.OutputDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-                _loggingService.WriteDebug(e.Data);
-        };
+        var result = _processManagerService.ExecuteProcess(request);
 
-        process.ErrorDataReceived += (sender, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data))
-                _loggingService.WriteError(e.Data);
-        };
-
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        process.WaitForExit();
-
-        if (process.ExitCode == 0)
+        if (result.Success)
         {
             // Delete all MSI files
             foreach (var msiFile in Directory.GetFiles(installPath, "*.msi"))
@@ -292,8 +272,8 @@ public class VersionService : IVersionService
             {
                 foreach (var file in Directory.GetFiles(acumaticaDir, "*", SearchOption.AllDirectories))
                 {
-                    string relativePath    = Path.GetRelativePath(acumaticaDir, file);
-                    var    destinationPath = Path.Combine(installPath, relativePath);
+                    string relativePath = Path.GetRelativePath(acumaticaDir, file);
+                    var destinationPath = Path.Combine(installPath, relativePath);
                     Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? string.Empty);
                     File.Move(file, destinationPath);
                 }
@@ -305,7 +285,7 @@ public class VersionService : IVersionService
             return true;
         }
 
-        _loggingService.WriteError($"MSI installation failed with exit code: {process.ExitCode}");
+        _loggingService.WriteError($"MSI installation failed with exit code: {result.ExitCode}");
         return false;
     }
 
@@ -328,8 +308,8 @@ public class VersionService : IVersionService
     private static string FormatBytes(long bytes)
     {
         string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
-        var      counter  = 0;
-        decimal  number   = bytes;
+        var counter = 0;
+        decimal number = bytes;
 
         while (Math.Round(number / 1024) >= 1)
         {
