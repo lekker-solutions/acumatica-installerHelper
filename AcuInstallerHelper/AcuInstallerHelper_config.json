@@ -2,6 +2,6 @@
   "AcumaticaDir": "C:\\Acumatica",
   "AcumaticaSiteDir": "Sites",
   "AcumaticaVersionDir": "Versions",
-  "SiteType": "Production",
-  "InstallDebugTools": true
+  "SiteType": "Development",
+  "InstallDebugTools": false
 }

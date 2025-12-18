@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/info/">
+    <File Path=".gitignore" />
+    <File Path="AcuInstallerHelper/AcuInstallerHelper_config.json" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="RunTests.ps1" />
+    <File Path="tests/AcumaticaConfigCmdlets.Tests.ps1" />
+    <File Path="tests/AcumaticaPatchCmdlets.Tests.ps1" />
+    <File Path="tests/AcumaticaSiteCmdlets.Tests.ps1" />
+    <File Path="tests/AcumaticaVersionCmdlets.Tests.ps1" />
+  </Folder>
+  <Project Path="src/AcumaticaInstallerHelper.CLI/AcumaticaInstallerHelper.CLI.csproj" />
+  <Project Path="src/AcumaticaInstallerHelper/AcumaticaInstallerHelper.csproj" />
+</Solution>

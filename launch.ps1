@@ -1,1 +1,0 @@
-Import-Module $PSScriptRoot/AcuInstallerHelper -Verbose

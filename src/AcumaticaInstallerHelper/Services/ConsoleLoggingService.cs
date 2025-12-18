@@ -1,0 +1,178 @@
+namespace AcumaticaInstallerHelper.Services;
+
+public class ConsoleLoggingService : ILoggingService
+{
+    public bool OverridePromptsToYes { get; set; } = false;
+
+    public ConsoleLoggingService()
+    {
+    }
+
+    public void WriteLog(LogLevel level, string message)
+    {
+        var (icon, color) = GetLogLevelDisplay(level);
+        
+        Console.ForegroundColor = color;
+        Console.Write($"{icon} ");
+        Console.ResetColor();
+        Console.WriteLine(message);
+    }
+
+    public void WriteHeader(string title, string? subtitle = null)
+    {
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine($"=== {title} ===");
+        if (!string.IsNullOrEmpty(subtitle))
+        {
+            Console.WriteLine($"    {subtitle}");
+        }
+        Console.ResetColor();
+        Console.WriteLine();
+    }
+
+    public void WriteSection(string title)
+    {
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine($"--- {title} ---");
+        Console.ResetColor();
+    }
+
+    public void WriteStep(string message)
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("▶ ");
+        Console.ResetColor();
+        Console.WriteLine(message);
+    }
+
+    public void WriteTable(Dictionary<string, string> data, string? title = null)
+    {
+        if (!string.IsNullOrEmpty(title))
+        {
+            WriteSection(title);
+        }
+
+        var maxKeyLength = data.Keys.Max(k => k.Length);
+        
+        foreach (var kvp in data)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.Write($"{kvp.Key.PadRight(maxKeyLength)} : ");
+            Console.ResetColor();
+            Console.WriteLine(kvp.Value);
+        }
+        Console.WriteLine();
+    }
+
+    public void WriteSummary(string operation, string status, Dictionary<string, string>? details = null)
+    {
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"✓ {operation} - {status}");
+        Console.ResetColor();
+        
+        if (details != null)
+        {
+            WriteTable(details);
+        }
+    }
+
+    public void WriteProgress(string message, int? percentage = null)
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("⏳ ");
+        Console.ResetColor();
+        
+        if (percentage.HasValue)
+        {
+            Console.WriteLine($"{message} ({percentage}%)");
+        }
+        else
+        {
+            Console.WriteLine(message);
+        }
+    }
+
+    public bool PromptYesNo(string message)
+    {
+        if (OverridePromptsToYes)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write("? ");
+            Console.ResetColor();
+            Console.Write($"{message} (Y/N): ");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Y [Auto-answered]");
+            Console.ResetColor();
+            return true;
+        }
+
+        while (true)
+        {
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write("? ");
+            Console.ResetColor();
+            Console.Write($"{message} (Y/N): ");
+            
+            var response = Console.ReadLine()?.Trim().ToUpperInvariant();
+            
+            switch (response)
+            {
+                case "Y":
+                case "YES":
+                    return true;
+                case "N":
+                case "NO":
+                    return false;
+                default:
+                    WriteWarning("Invalid input. Please enter Y or N");
+                    continue;
+            }
+        }
+    }
+
+    public void WriteDebug(string message) => WriteLog(LogLevel.Debug, message);
+    public void WriteInfo(string message) => WriteLog(LogLevel.Info, message);
+    public void WriteSuccess(string message) => WriteLog(LogLevel.Success, message);
+    public void WriteWarning(string message) => WriteLog(LogLevel.Warning, message);
+    public void WriteError(string message) => WriteLog(LogLevel.Error, message);
+
+    public void WriteProgressBar(string message, int percentage)
+    {
+        const int barWidth    = 30;
+        var       filledWidth = (int)(percentage / 100.0 * barWidth);
+        int       emptyWidth  = barWidth - filledWidth;
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("⏳ ");
+        Console.ResetColor();
+
+        Console.Write($"{message} ");
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write(new string('█', filledWidth));
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(new string('░', emptyWidth));
+        Console.ResetColor();
+
+        Console.WriteLine($" {percentage}%");
+    }
+
+    private static (string Icon, ConsoleColor Color) GetLogLevelDisplay(LogLevel level)
+    {
+        return level switch
+        {
+            LogLevel.Debug => ("🔍", ConsoleColor.DarkGray),
+            LogLevel.Info => ("ℹ", ConsoleColor.White),
+            LogLevel.Success => ("✅", ConsoleColor.Green),
+            LogLevel.Warning => ("⚠", ConsoleColor.Yellow),
+            LogLevel.Error => ("❌", ConsoleColor.Red),
+            LogLevel.Progress => ("⏳", ConsoleColor.Yellow),
+            LogLevel.Prompt => ("?", ConsoleColor.Magenta),
+            _ => ("•", ConsoleColor.White)
+        };
+    }
+
+}

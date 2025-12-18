@@ -9,32 +9,30 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule        = 'AcuInstallerHelper.psm1'
+    RootModule        = 'AcumaticaInstallerHelper.PowerShell.dll'
 
     # Version number of this module.
-    ModuleVersion     = '0.7.1'
-
-    # Supported PSEditions
-    # CompatiblePSEditions = @()
+    ModuleVersion     = '1.0'
 
     # ID used to uniquely identify this module
-    GUID              = '1b6c3d2f-b6df-48c8-8c6b-d324e89badf7'
+    GUID                 = '1b6c3d2f-b6df-48c8-8c6b-d324e89badf7'
 
     # Author of this module
-    Author            = 'Kyle Vanderstoep'
+    Author               = 'Kyle Vanderstoep'
 
     # Company or vendor of this module
-    CompanyName       = 'Lekker Solutions LLC'
+    CompanyName          = 'Lekker Solutions LLC'
 
     # Copyright statement for this module
-    Copyright         = '(c) Kyle Vanderstoep. All rights reserved.'
+    Copyright            = '(c) Lekker Solutions LLC. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'Assists with the installation and removal of Acumatica Sites and Versions'
+    Description          = 'PowerShell module for managing Acumatica ERP installations, sites, versions, and patches. Provides automated installation, site creation/removal, configuration management, and patch operations. Requires PowerShell 7.0 or higher.'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '5.1'
-
+    PowerShellVersion    = '7.0'
+    CompatiblePSEditions = @('Core')
+    
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
 
@@ -68,34 +66,26 @@
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     # NestedModules = @()
 
-    # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @(
-        'Add-AcuVersion',
-        'Remove-AcuVersion',
-        'Get-AcuVersions',
-        'Get-InstalledAcuVersions',
-        'Add-AcuSite',
-        'Remove-AcuSite',
-        'Update-AcuSite',
-        'Set-AcuDir',
-        'Set-AcuSiteDir',
-        'Set-AcuVersionDir',
-        'Set-InstallDebugTools',
-        'Set-SiteType',
-        'Get-AcuDir',
-        'Get-AcuSiteDir',
-        'Get-AcuVersionDir',
-        'Get-InstallDebugTools',
-        'Get-SiteType')
-
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = @()
-
-    # Variables to export from this module
-    VariablesToExport = @()
-
-    # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport   = @()
+    CmdletsToExport      = @(
+        'Install-AcumaticaVersion',
+        'Uninstall-AcumaticaVersion', 
+        'Get-AcumaticaVersion',
+        'New-AcumaticaSite',
+        'Remove-AcumaticaSite',
+        'Get-AcumaticaSite',
+        'Update-AcumaticaSite',
+        'Get-AcumaticaConfig',
+        'Set-AcumaticaDirectory',
+        'Set-AcumaticaSiteDirectory',
+        'Set-AcumaticaVersionDirectory',
+        'Set-AcumaticaDefaultSiteType',
+        'Set-AcumaticaInstallDebugTools',
+        'Test-AcumaticaPatch',
+        'Install-AcumaticaPatch',
+        'Restore-AcumaticaPatch',
+        'Test-AcumaticaPatchTool'
+    )
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -112,27 +102,25 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags         = @('Acumatica', 'ERP', 'Installation', 'Configuration')
+            Tags                 = @('Acumatica', 'ERP', 'Installation', 'Configuration', 'Site-Management', 'Version-Management', 'Patching')
 
             # A URL to the license for this module.
-            LicenseUri   = 'https://www.gnu.org/licenses/gpl-3.0.html#license-text'
+            LicenseUri           = 'https://www.gnu.org/licenses/gpl-3.0.html#license-text'
 
             # A URL to the main website for this project.
-            ProjectUri   = 'https://github.com/lekker-solutions/acumatica-installerHelper'
+            ProjectUri           = 'https://github.com/lekker-solutions/acumatica-installerHelper'
 
             # A URL to an icon representing this module.
             # IconUri = ''
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
-Version 0.7.0
-- Added InstallDebugTools configuration option
-- Added SiteType configuration (Dev/Production)
-- Optimized code structure and error handling
-- Improved URL validation and download logic
-- Enhanced configuration management functions
-- Better separation of concerns
-- Sites automatically use dev configuration based on SiteType setting
+            Version 1.0
+            - Converted to Binary Module with C# cmdlets
+            - Added comprehensive integration tests
+            - Added Patching Support (Test-AcumaticaPatch, Install-AcumaticaPatch, Restore-AcumaticaPatch, Test-AcumaticaPatchTool)
+            - Added Support for new ac.exe command arguments in 25R2
+            - Improved configuration management with persistent settings
 '@
 
             # Prerelease string of this module
