@@ -19,7 +19,8 @@ public class ProcessManagerService : IProcessManagerService
 
     public ProcessResult ExecuteProcess(ProcessExecutionRequest request)
     {
-        if (!File.Exists(request.ExecutablePath))
+        if (!File.Exists(request.ExecutablePath)
+        && Path.IsPathFullyQualified(request.ExecutablePath))
         {
             _loggingService.WriteError($"Executable not found at: {request.ExecutablePath}");
             return new ProcessResult { Success = false, ErrorMessage = $"Executable not found at: {request.ExecutablePath}" };

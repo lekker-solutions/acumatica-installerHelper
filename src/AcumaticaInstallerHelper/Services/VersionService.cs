@@ -244,14 +244,17 @@ public class VersionService : IVersionService
         string installPath = versionPath;
         Directory.CreateDirectory(installPath);
 
-        string features = string.Empty;
+        var arguments = new List<string> { "/a", msiPath };
+        
         if (version.DebuggerTools)
-            features = "ADDLOCAL=DEBUGGERTOOLS";
+            arguments.Add("ADDLOCAL=DEBUGGERTOOLS");
+            
+        arguments.AddRange(new[] { "/qb", $"TARGETDIR={installPath}" });
 
         var request = new ProcessExecutionRequest
         {
             ExecutablePath = "msiexec.exe",
-            Arguments = new[] { "/a", msiPath, features, "/qb", $"TARGETDIR={installPath}" },
+            Arguments = arguments.ToArray(),
             UseRealTimeLogging = true,
             ThrowOnError = false
         };
