@@ -124,18 +124,20 @@ public class AcumaticaManager
 
     public bool RemoveSite(string siteName)
     {
-        string sitePath = _siteRegistryService.GetSitePath(siteName) ?? Path.Combine(
-            _configService.GetAcumaticaDirectory(),
-            _configService.GetSiteDirectory(),
-            siteName
-        );
+        string? sitePath = _siteRegistryService.GetSitePath(siteName);
+        if (string.IsNullOrEmpty(sitePath))
+            throw new InvalidOperationException($"Could not find site path for: {siteName}");
+
+        var version = GetSiteVersion(siteName);
+        if (string.IsNullOrEmpty(version))
+            throw new InvalidOperationException($"Could not determine version for site: {siteName}");
 
         return _siteService.RemoveSite(new SiteConfiguration
         {
             Action       = SiteAction.DeleteSite,
             SiteName     = siteName,
             SitePath     = sitePath,
-            Version      = new AcumaticaVersion(),
+            Version      = new AcumaticaVersion { Version = version },
             ForceInstall = false
         });
     }

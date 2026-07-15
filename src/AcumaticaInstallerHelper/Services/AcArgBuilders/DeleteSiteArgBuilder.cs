@@ -9,7 +9,7 @@ public class DeleteSiteArgBuilder : IAcArgBuilder
         return new List<string>
         {
             "-configmode:DeleteSite",
-            $"-sitename:\"{siteConfig.SiteName}\""
+            $"-iname:\"{siteConfig.SiteName}\""
         };
     }
 }
