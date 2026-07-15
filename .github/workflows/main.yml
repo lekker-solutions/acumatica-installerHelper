@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - 'main'  # This will trigger the workflow for pushes (merges) to the main branch
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'  # Version tags (e.g. 1.2.0) trigger the publish job
 
 jobs:
   test:
@@ -33,7 +35,7 @@ jobs:
         shell: pwsh
 
   publish:
-    if: github.ref == 'refs/heads/main' # This job only runs when the branch is 'main'
+    if: startsWith(github.ref, 'refs/tags/') # This job only runs for version tag pushes
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
