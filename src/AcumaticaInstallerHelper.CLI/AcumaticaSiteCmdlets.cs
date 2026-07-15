@@ -18,6 +18,12 @@ namespace AcumaticaInstallerHelper.CLI
         [Parameter(HelpMessage = "Site installation path")]
         public string? Path { get; set; }
 
+        [Parameter(HelpMessage = "IIS website to install under (must exist)")]
+        public string? Website { get; set; }
+
+        [Parameter(HelpMessage = "IIS application pool (created if missing)")]
+        public string? AppPool { get; set; }
+
         [Parameter(HelpMessage = "Install version if not present")]
         public SwitchParameter InstallVersion { get; set; }
 
@@ -37,6 +43,24 @@ namespace AcumaticaInstallerHelper.CLI
         {
             try
             {
+                if (Website is not null)
+                {
+                    var websiteExists = IISWebsiteExists(Website);
+                    if (websiteExists == false)
+                    {
+                        WriteError(new ErrorRecord(
+                            new ArgumentException($"IIS website '{Website}' does not exist. Create the website in IIS first; the Acumatica installer creates application pools but not websites."),
+                            "WebsiteNotFound",
+                            ErrorCategory.ObjectNotFound,
+                            Website));
+                        return;
+                    }
+                    if (websiteExists is null)
+                    {
+                        WriteVerbose($"Could not verify that IIS website '{Website}' exists (appcmd unavailable or not elevated); continuing.");
+                    }
+                }
+
                 var acumaticaVersion = new AcumaticaVersion
                 {
                     Version = Version,
@@ -50,6 +74,8 @@ namespace AcumaticaInstallerHelper.CLI
                     Action = SiteAction.NewInstance,
                     SiteName = Name,
                     SitePath = Path ?? string.Empty,
+                    IISWebsite = Website ?? "Default Web Site",
+                    IISAppPool = AppPool ?? "DefaultAppPool",
                     Version = acumaticaVersion,
                     IsPortal = Portal.IsPresent,
                     SiteType = Development.IsPresent ? SiteType.Development : SiteType.Production,
@@ -77,6 +103,34 @@ namespace AcumaticaInstallerHelper.CLI
             {
                 WriteError(new ErrorRecord(ex, "CreateSiteException", ErrorCategory.NotSpecified, Name));
             }
+        }
+
+        // Returns null when existence cannot be determined (no IIS tooling or appcmd failed, e.g. not elevated)
+        private static bool? IISWebsiteExists(string websiteName)
+        {
+            var appcmd = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Windows),
+                "System32", "inetsrv", "appcmd.exe");
+
+            if (!File.Exists(appcmd)) return null;
+
+            var startInfo = new System.Diagnostics.ProcessStartInfo(appcmd, "list site")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = System.Diagnostics.Process.Start(startInfo);
+            if (process is null) return null;
+
+            var output = process.StandardOutput.ReadToEnd();
+            process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            if (process.ExitCode != 0) return null;
+
+            return output.Contains($"SITE \"{websiteName}\"", StringComparison.OrdinalIgnoreCase);
         }
     }
 

@@ -57,6 +57,7 @@ The module uses a configuration file (`AcuInstallerHelper_config.json`) to store
 ### SiteType Configuration
 
 The `SiteType` setting controls the default behavior for new sites:
+
 - **Production** (default): Sites are created with standard production settings
 - **Development**: Sites are automatically configured for development (compilation disabled, optimizations enabled)
 
@@ -137,6 +138,9 @@ New-AcumaticaSite -Version "24.100.0023" -Name "DevSite" -Path "D:\DevSites\MyDe
 
 # Create a portal site
 New-AcumaticaSite -Version "24.100.0023" -Name "CustomerPortal" -Portal
+
+# Create a site under a specific IIS website and application pool
+New-AcumaticaSite -Version "24.100.0023" -Name "AcmeERP" -Website "acme.contou-clients.dev" -AppPool "AcmePool"
 
 # Install version automatically if not present
 New-AcumaticaSite -Version "24.100.0023" -Name "AutoInstallSite" -InstallVersion
@@ -238,7 +242,9 @@ Acumatica versions must follow the format: `##.###.####` (e.g., "24.100.0023")
 - The module uses the local SQL Server instance `(local)` for new sites
 - SQL Server must be installed and running on the machine
 - Database names match the site names by default
-- Sites are created in IIS under "Default Web Site" using "DefaultAppPool"
+- Sites are created in IIS under "Default Web Site" using "DefaultAppPool" unless overridden with `-Website` and `-AppPool`
+- The IIS website passed to `-Website` must already exist — the Acumatica installer creates application pools but not websites. `New-AcumaticaSite` verifies this up front and fails with a clear error if the website is missing
+- Sites are always installed as an IIS application at `/{SiteName}` under the chosen website (e.g. `acme.contou-clients.dev/AcmeERP`); to serve at the website root, add an HTTP redirect from `/` to `/{SiteName}`
 - The account running the PowerShell session needs appropriate SQL Server permissions to create databases
 - Patch operations create backups by default for safety
 
@@ -249,11 +255,13 @@ Acumatica versions must follow the format: `##.###.####` (e.g., "24.100.0023")
 If you encounter errors when creating sites, ensure:
 
 1. SQL Server is installed and running:
+
    ```powershell
    Get-Service -Name 'MSSQL*' | Where-Object {$_.Status -eq 'Running'}
    ```
 
 2. You can connect to `(local)`:
+
    ```powershell
    sqlcmd -S "(local)" -Q "SELECT @@VERSION"
    ```
@@ -263,6 +271,7 @@ If you encounter errors when creating sites, ensure:
 ### Assembly Loading Warnings
 
 When creating sites with newer Acumatica versions (2024 R1+), you may see warnings about missing assemblies like:
+
 ```
 [OEM] Error while loading the [Assembly].dll. Message: Could not find assembly 'netstandard, Version=2.0.0.0...
 ```
