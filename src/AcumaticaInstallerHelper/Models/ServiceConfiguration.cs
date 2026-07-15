@@ -109,6 +109,8 @@ public class AcumaticaVersion
     public bool DebuggerTools { get; set; }
     private static readonly Regex VersionRegex = new(@"^\d{2}\.\d{3}\.\d{4}$", RegexOptions.Compiled);
 
+    public override string ToString() => MinorVersion;
+
     public void ValidateVersionFormat(string version)
     {
         if (!VersionRegex.IsMatch(version)) throw new VersionFormatException(version);

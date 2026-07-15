@@ -278,7 +278,7 @@ public class VersionService : IVersionService
                     string relativePath = Path.GetRelativePath(acumaticaDir, file);
                     var destinationPath = Path.Combine(installPath, relativePath);
                     Directory.CreateDirectory(Path.GetDirectoryName(destinationPath) ?? string.Empty);
-                    File.Move(file, destinationPath);
+                    File.Move(file, destinationPath, overwrite: true);
                 }
 
                 Directory.Delete(acumaticaDir, true);
