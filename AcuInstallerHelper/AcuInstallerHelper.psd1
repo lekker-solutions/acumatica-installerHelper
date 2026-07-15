@@ -12,7 +12,7 @@
     RootModule        = 'AcumaticaInstallerHelper.PowerShell.dll'
 
     # Version number of this module.
-    ModuleVersion     = '1.1.0'
+    ModuleVersion     = '1.2.0'
 
     # ID used to uniquely identify this module
     GUID                 = '1b6c3d2f-b6df-48c8-8c6b-d324e89badf7'
