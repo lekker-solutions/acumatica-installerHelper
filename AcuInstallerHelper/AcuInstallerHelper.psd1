@@ -119,6 +119,13 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+            Version 1.2.0
+            - New-AcumaticaSite: added -Website and -AppPool parameters to target a specific IIS website and application pool
+            - New-AcumaticaSite: pre-flight check fails fast with a clear error when the target IIS website does not exist
+            - Fixed Remove-AcumaticaSite (resolved wrong ac.exe path and invalid ac.exe argument)
+            - Fixed Install-AcumaticaVersion -Force failing over an existing installation
+            - AcumaticaVersion.ToString now returns the version number
+
             Version 1.1.0
             - Added DB management server settings (Set-AcumaticaDBServerName, Set-AcumaticaDBServerAuth)
             - Added SQL auth support for DB management with DPAPI-encrypted credential storage (Set-AcumaticaDBServerCredential, Clear-AcumaticaDBServerCredential)
