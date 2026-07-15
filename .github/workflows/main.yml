@@ -38,8 +38,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build module
+        run: dotnet build src/AcumaticaInstallerHelper.CLI/AcumaticaInstallerHelper.CLI.csproj -c Release
+        shell: pwsh
+
       - name: Publish to PowerShell Gallery
         env:
           NUGET_API_KEY: ${{ secrets.POWERSHELL_GALLERY_API_KEY }}
         run: |
-          Publish-Module -Path AcuInstallerHelper -NuGetApiKey ${{ secrets.POWERSHELL_GALLERY_API_KEY }} -Verbose
+          $version = (Import-PowerShellDataFile .\AcuInstallerHelper\AcuInstallerHelper.psd1).ModuleVersion
+          if (Find-Module AcuInstallerHelper -RequiredVersion $version -ErrorAction SilentlyContinue) {
+            Write-Host "Version $version is already on PowerShell Gallery; skipping publish."
+            exit 0
+          }
+          Publish-Module -Path AcuInstallerHelper -NuGetApiKey $env:NUGET_API_KEY -Verbose
+        shell: pwsh
