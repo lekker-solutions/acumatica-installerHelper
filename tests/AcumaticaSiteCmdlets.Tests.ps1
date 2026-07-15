@@ -5,7 +5,13 @@ Describe "AcumaticaSiteCmdlets" {
         # Use the same normal version that was installed in version tests
         $script:NormalVersion = "24.215.0011"
         $script:TestSiteName = "TestSite"
-        
+
+        # Drop leftover test databases from previous runs. Remove-AcumaticaSite does not drop the
+        # database, and ac.exe refuses to create a site when a database with the same name exists.
+        foreach ($db in @($script:TestSiteName, "$($script:TestSiteName)Dev")) {
+            sqlcmd -S "(local)" -C -Q "IF DB_ID('$db') IS NOT NULL BEGIN ALTER DATABASE [$db] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$db]; END" 2>$null | Out-Null
+        }
+
         Write-Host "Starting site tests with Normal version: $script:NormalVersion" -ForegroundColor Cyan
     }
 
@@ -92,6 +98,20 @@ Describe "AcumaticaSiteCmdlets" {
             }
         }
 
+        It "Should accept Website and AppPool parameters" {
+            try {
+                New-AcumaticaSite -Version "24.215.0011" -Name "TestSite" -Website "Default Web Site" -AppPool "TestSitePool"
+            }
+            catch {
+                # Expected if version doesn't exist
+            }
+        }
+
+        It "Should fail with a clear error when Website does not exist in IIS" -Skip:(-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            { New-AcumaticaSite -Version "24.215.0011" -Name "TestSite" -Website "PesterNonexistentWebsite" -ErrorAction Stop } |
+                Should -Throw "*does not exist*"
+        }
+
         It "Should accept DebugTools switch" {
             try {
                 New-AcumaticaSite -Version "24.215.0011" -Name "TestSite" -DebugTools
@@ -165,6 +185,11 @@ Describe "AcumaticaSiteCmdlets" {
             catch {
                 # Expected if site doesn't exist
             }
+        }
+
+        It "Should fail with a clear error when site does not exist" {
+            { Remove-AcumaticaSite -Name "PesterNonexistentSite" -ErrorAction Stop } |
+                Should -Throw "*Could not find site path*"
         }
     }
 

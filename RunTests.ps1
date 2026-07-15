@@ -138,6 +138,7 @@ try {
         # Create Pester configuration for v5+
         $pesterConfig = New-PesterConfiguration
         $pesterConfig.Run.Path = $testFile.FullName
+        $pesterConfig.Run.PassThru = $true
         $pesterConfig.Output.Verbosity = $OutputFormat
         
         # Set CI-specific settings
