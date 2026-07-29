@@ -150,6 +150,10 @@ try {
         # Set CI-specific settings
         if ($OutputFormat -eq 'CI') {
             $pesterConfig.Output.CIFormat = 'Auto'
+            # Integration tests need a real Acumatica environment (SQL Server,
+            # IIS, installed builds) and prompt interactively - they can only
+            # hang a hosted runner. CI runs the environment-free tests.
+            $pesterConfig.Filter.ExcludeTag = @('RequiresAcumatica')
         }
         
         $result = Invoke-Pester -Configuration $pesterConfig

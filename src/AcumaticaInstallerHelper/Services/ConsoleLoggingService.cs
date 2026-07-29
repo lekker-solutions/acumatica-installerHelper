@@ -117,7 +117,7 @@ public class ConsoleLoggingService : ILoggingService
             Console.Write($"{message} (Y/N): ");
             
             var response = Console.ReadLine()?.Trim().ToUpperInvariant();
-            
+
             switch (response)
             {
                 case "Y":
@@ -125,6 +125,12 @@ public class ConsoleLoggingService : ILoggingService
                     return true;
                 case "N":
                 case "NO":
+                    return false;
+                case null:
+                    // ReadLine returns null at EOF (redirected/closed stdin, e.g.
+                    // CI or a non-interactive SSH session). Retrying would spin
+                    // forever on input that can never arrive - answer No.
+                    WriteWarning("No interactive input available - answering No");
                     return false;
                 default:
                     WriteWarning("Invalid input. Please enter Y or N");
