@@ -62,18 +62,12 @@ public class WebConfigService : IWebConfigService
                 compilationElement.SetAttributeValue("batch", "false");
                 
                 _loggingService.WriteDebug("Set optimizeCompilations=true and batch=false");
-
-                // Note: The pages element is not within compilation in the actual web.config structure
-                // It's a separate element under system.web
             }
 
-            // Find pages element under system.web (not within compilation)
-            var pagesElement = doc.Descendants("pages").FirstOrDefault();
-            if (pagesElement != null)
-            {
-                pagesElement.SetAttributeValue("compilationMode", "Never");
-                _loggingService.WriteDebug("Set pages compilationMode=Never");
-            }
+            // Deliberately no pages compilationMode change: Acumatica's master
+            // pages use CodeFile attributes, which no-compile pages reject —
+            // setting compilationMode=Never breaks every request with
+            // "The attribute 'autoeventwireup' is not allowed in this page".
 
             doc.Save(webConfigPath);
             _loggingService.WriteSuccess("Development configuration applied to web.config");

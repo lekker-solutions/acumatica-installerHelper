@@ -39,7 +39,8 @@ namespace AcumaticaInstallerHelper.CLI
             var processManagerService = new ProcessManagerService(loggingService);
             var siteRegistryService = new SiteRegistryService(loggingService, webConfigService);
             var versionService = new VersionService(configService, loggingService, processManagerService, httpClient);
-            var siteService = new SiteService(versionService, argFactory, loggingService, siteRegistryService, webConfigService, processManagerService);
+            var sqlAccessService = new SqlAccessService(loggingService);
+            var siteService = new SiteService(versionService, argFactory, loggingService, siteRegistryService, webConfigService, processManagerService, sqlAccessService);
             var patchService = new PatchService(versionService, loggingService, processManagerService);
 
             return new AcumaticaManager(

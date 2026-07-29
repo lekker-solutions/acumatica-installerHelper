@@ -12,7 +12,7 @@
     RootModule        = 'AcumaticaInstallerHelper.PowerShell.dll'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.0'
+    ModuleVersion     = '1.2.1'
 
     # ID used to uniquely identify this module
     GUID                 = '1b6c3d2f-b6df-48c8-8c6b-d324e89badf7'
@@ -119,6 +119,15 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+            Version 1.2.1
+            - New-AcumaticaSite now grants the IIS app pool identity (IIS APPPOOL\<pool>) a SQL Server
+              login and db_owner membership on the site database. ac.exe only does this for pools the
+              interactive Configuration wizard creates; command-line deployments previously failed on
+              first request with "Login failed for user 'IIS APPPOOL\<pool>'".
+            - Development mode no longer sets pages compilationMode=Never, which broke every request
+              ("The attribute 'autoeventwireup' is not allowed in this page") because Acumatica's
+              master pages use CodeFile attributes that no-compile pages reject.
+
             Version 1.2.0
             - New-AcumaticaSite: added -Website and -AppPool parameters to target a specific IIS website and application pool
             - New-AcumaticaSite: pre-flight check fails fast with a clear error when the target IIS website does not exist
