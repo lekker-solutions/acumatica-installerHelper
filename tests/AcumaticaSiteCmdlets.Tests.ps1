@@ -1,4 +1,4 @@
-Describe "AcumaticaSiteCmdlets" {
+Describe "AcumaticaSiteCmdlets" -Tag 'RequiresAcumatica' {
     BeforeAll {
         Import-Module "$PSScriptRoot\..\AcuInstallerHelper" -Force
         

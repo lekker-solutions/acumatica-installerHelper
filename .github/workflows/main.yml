@@ -16,15 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup PowerShell 7
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install PowerShell 7
-        run: |
-          winget install --id Microsoft.Powershell --source winget --accept-package-agreements --accept-source-agreements
-        shell: cmd
+      # The module DLLs are gitignored — the manifest's RootModule and the
+      # Pester tests need a build first. (windows-latest ships pwsh 7.)
+      - name: Build module
+        run: dotnet build src/AcumaticaInstallerHelper.CLI/AcumaticaInstallerHelper.CLI.csproj -c Release
+        shell: pwsh
 
       - name: Test Module Manifest
         run: Test-ModuleManifest -Path .\AcuInstallerHelper\AcuInstallerHelper.psd1
