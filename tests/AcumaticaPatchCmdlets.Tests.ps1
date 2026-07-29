@@ -5,7 +5,8 @@ Describe "AcumaticaPatchCmdlets" -Tag 'RequiresAcumatica' {
 
     Context "Test-AcumaticaPatch" {
         It "Should require SiteName parameter" {
-            { Test-AcumaticaPatch } | Should -Throw
+            # Invoking without the parameter prompts in an interactive host instead of throwing
+            (Get-Command Test-AcumaticaPatch).Parameters['SiteName'].Attributes.Mandatory | Should -Contain $true
         }
 
         It "Should throw on empty site name" {
@@ -33,7 +34,7 @@ Describe "AcumaticaPatchCmdlets" -Tag 'RequiresAcumatica' {
 
     Context "Install-AcumaticaPatch" {
         It "Should require SiteName parameter" {
-            { Install-AcumaticaPatch } | Should -Throw
+            (Get-Command Install-AcumaticaPatch).Parameters['SiteName'].Attributes.Mandatory | Should -Contain $true
         }
 
         It "Should throw on empty site name" {
@@ -82,7 +83,7 @@ Describe "AcumaticaPatchCmdlets" -Tag 'RequiresAcumatica' {
 
     Context "Restore-AcumaticaPatch" {
         It "Should require SiteName parameter" {
-            { Restore-AcumaticaPatch } | Should -Throw
+            (Get-Command Restore-AcumaticaPatch).Parameters['SiteName'].Attributes.Mandatory | Should -Contain $true
         }
 
         It "Should throw on empty site name" {
@@ -113,7 +114,7 @@ Describe "AcumaticaPatchCmdlets" -Tag 'RequiresAcumatica' {
 
     Context "Test-AcumaticaPatchTool" {
         It "Should require Version parameter" {
-            { Test-AcumaticaPatchTool } | Should -Throw
+            (Get-Command Test-AcumaticaPatchTool).Parameters['Version'].Attributes.Mandatory | Should -Contain $true
         }
 
         It "Should throw on empty version" {
