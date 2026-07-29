@@ -139,8 +139,14 @@ try {
         $pesterConfig = New-PesterConfiguration
         $pesterConfig.Run.Path = $testFile.FullName
         $pesterConfig.Run.PassThru = $true
-        $pesterConfig.Output.Verbosity = $OutputFormat
-        
+        # Pester's Output.Verbosity only accepts None/Normal/Detailed/Diagnostic;
+        # map this script's CI/Minimal formats onto valid values.
+        $pesterConfig.Output.Verbosity = switch ($OutputFormat) {
+            'CI'      { 'Normal' }
+            'Minimal' { 'None' }
+            default   { $OutputFormat }
+        }
+
         # Set CI-specific settings
         if ($OutputFormat -eq 'CI') {
             $pesterConfig.Output.CIFormat = 'Auto'
@@ -166,6 +172,12 @@ try {
     
     if ($totalResults.FailedCount -gt 0) {
         Write-Host "`nSome tests failed. Check output above for details." -ForegroundColor Red
+        exit 1
+    }
+    elseif ($totalResults.TotalCount -eq 0) {
+        # A crashed Invoke-Pester leaves zero results - that is a failure, not
+        # a pass (this previously green-washed broken runs).
+        Write-Host "`nNo tests ran - treating as failure." -ForegroundColor Red
         exit 1
     }
     else {
