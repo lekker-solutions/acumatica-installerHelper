@@ -12,6 +12,7 @@ public class SiteService : ISiteService
     private readonly ISiteRegistryService _siteRegistryService;
     private readonly IWebConfigService    _webConfigService;
     private readonly IProcessManagerService _processManagerService;
+    private readonly ISqlAccessService    _sqlAccessService;
 
     public SiteService(
         IVersionService      versionService,
@@ -19,7 +20,8 @@ public class SiteService : ISiteService
         ILoggingService      loggingService,
         ISiteRegistryService siteRegistryService,
         IWebConfigService webConfigService,
-        IProcessManagerService processManagerService)
+        IProcessManagerService processManagerService,
+        ISqlAccessService sqlAccessService)
     {
         _versionService      = versionService;
         _argFactory          = argFactory;
@@ -27,6 +29,7 @@ public class SiteService : ISiteService
         _siteRegistryService = siteRegistryService;
         _webConfigService    = webConfigService;
         _processManagerService = processManagerService;
+        _sqlAccessService    = sqlAccessService;
     }
 
     public bool RequiresAdministratorPrivileges()
@@ -139,6 +142,12 @@ public class SiteService : ISiteService
                 string webConfigPath = Path.Combine(siteConfig.SitePath, "web.config");
                 _webConfigService.ApplyDevelopmentConfiguration(webConfigPath);
             }
+
+            // ac.exe grants SQL access only to pools created by the interactive
+            // Configuration wizard; from the command line the pool identity is
+            // left without a login and the site fails on first request.
+            if (success)
+                success = _sqlAccessService.GrantAppPoolAccess(siteConfig);
 
             if (success)
                 _loggingService.WriteSummary("Site Installation", "Completed Successfully",
